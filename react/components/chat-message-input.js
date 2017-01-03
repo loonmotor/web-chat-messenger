@@ -3,7 +3,7 @@ import React, {Component} from 'react';
 export default class ChatMessageInput extends Component {
     render() {
         return (
-            <div className="row" id="message-input">
+            <div className="row message-input">
                 <form className="col s12">
                     <div className="row">
                         <div className="input-field col s12">
