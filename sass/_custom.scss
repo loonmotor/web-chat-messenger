@@ -1,0 +1,25 @@
+.panel-users {
+    position: fixed;
+    height: 100%;
+    overflow-y: auto;
+    border-right: 1px solid silver;
+}
+
+.panel-chats {
+    padding: 0 0 50px 0 !important;
+}
+
+.chat-messages {
+    position: fixed;
+    height: 80%;
+    overflow-y: auto;
+    border-bottom: 1px solid silver;
+    margin-bottom: 40px;
+}
+
+#message-input {
+    position: fixed;
+    height: 20%;
+    bottom: -20px;
+    background: white;
+}
