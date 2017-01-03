@@ -1,10 +1,7 @@
 import React from 'react';
 import {render} from 'react-dom';
+import App from './react/components/app';
 
 render((
-    <div className="row">
-
-          
-
-        </div>
+    <App/>
 ), document.getElementById('app'));

@@ -1,15 +1,15 @@
-.panel-users {
+#panel-users {
     position: fixed;
     height: 100%;
     overflow-y: auto;
     border-right: 1px solid silver;
 }
 
-.panel-chats {
+#panel-chats {
     padding: 0 0 50px 0 !important;
 }
 
-.chat-messages {
+#chat-messages {
     position: fixed;
     height: 80%;
     overflow-y: auto;
