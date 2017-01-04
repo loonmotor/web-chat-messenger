@@ -1,5 +1,3 @@
-import axios from 'axios';
-
 const
     signInUser = (user) => ({
         type: 'SIGN_IN_USER',
