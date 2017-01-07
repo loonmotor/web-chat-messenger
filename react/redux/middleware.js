@@ -11,7 +11,6 @@ const
             case 'SIGN_IN_USER':
                 dispatch({type: 'CONNECTING_CHAT_SERVER'});
                 return socket.emit('signInUser', action.payload, (response) => {
-                    console.log(response);
                     if (response) {
                         setTimeout(() => { // 1 second delay for demonstration, as connection within localhost is fast
                             dispatch({
@@ -36,8 +35,12 @@ const
         
     }
     , chatMessageScroll = store => next => action => {
+        const {muted} = store.getState();
         switch (action.type) {
             case 'INCOMING_MESSAGE':
+                if (muted[action.payload.user.id]) {
+                    return;
+                }
                 if (Math.abs($('.chat-messages')[0].scrollHeight - $('.chat-messages').scrollTop() - $('.chat-messages').outerHeight()) < 2) {
                     $('.chat-messages').animate({
                         scrollTop: $('.chat-messages')[0].scrollHeight

@@ -25,6 +25,24 @@ const
     , incomingMessage = (message) => ({
         type: 'INCOMING_MESSAGE',
         payload: message
+    })
+    , incomingMessages = (messages) => ({
+        type: 'INCOMING_MESSAGES',
+        payload: messages
+    })
+    , toggleMute = (userId) => ({
+        type: 'TOGGLE_MUTE',
+        payload: userId
     });
 
-export {signInUser, updateUsers, typing, submitMessage, registerSocket, clearInput, incomingMessage};
+export {
+    signInUser,
+    updateUsers,
+    typing,
+    submitMessage,
+    registerSocket,
+    clearInput,
+    incomingMessage,
+    incomingMessages,
+    toggleMute
+};

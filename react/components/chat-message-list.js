@@ -15,11 +15,11 @@ export default class ChatMessageList extends Component {
         });
     }
     render() {
+        console.log(this.props.messages);
         return (
             <div className="row chat-messages">
                 <div className="col s12">
                     <div className="row">
-
                         {this.props.messages.map(message => {
                             return (
                                 <ChatMessageBubble message={message} user={this.props.user} key={message.id}/>

@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import UserBubble from './user-bubble';
 import {connect} from 'react-redux';
 import {updateUsers} from '../redux/action';
 import _ from 'lodash';
@@ -6,11 +7,13 @@ import _ from 'lodash';
 @connect(store => ({
     users: store.users,
     socket: store.socket,
-    user: store.user
+    user: store.user,
+    muted: store.muted
 }))
 export default class PanelUsers extends Component {
     componentDidMount() {
         this.props.socket.on('updateUsers', users => {
+            console.log(users);
             this.props.dispatch(updateUsers(users));
         });
     }
@@ -23,26 +26,23 @@ export default class PanelUsers extends Component {
                         <ul className="collection active-users">
                             {_.sortBy(this.props.users.activeUsers, o => o.name).map(user => {
                                 return (
-                                    <li key={user.id} className="collection-item avatar">
-                                        <img src={user.pictureUrl} className="circle"/>
-                                        <span className="title">{user.name} {this.props.user.id === user.id ? '(me)' : ''}</span>
-                                    </li>
+                                    <UserBubble key={user.id} user={user} me={this.props.user} dispatch={this.props.dispatch} muted={this.props.muted} />
                                 );
                             })}
                         </ul>
                     </div>
                 }
                 {this.props.users.idleUsers.length > 0 &&
-                    <ul className="collection">
-                        {_.sortBy(this.props.users.idleUsers, o => o.name).map(user => {
-                            return (
-                                <li key={user.id} className="collection-item avatar">
-                                    <img src={user.pictureUrl} className="circle"/>
-                                    <span className="title">{user.name} {this.props.user.id === user.id ? '(me)' : ''}</span>
-                                </li>
-                            );
-                        })}
-                    </ul>
+                    <div>
+                        <h6>Idle users</h6>
+                        <ul className="collection">
+                            {_.sortBy(this.props.users.idleUsers, o => o.name).map(user => {
+                                return (
+                                    <UserBubble key={user.id} user={user} me={this.props.user} dispatch={this.props.dispatch} muted={this.props.muted} />
+                                );
+                            })}
+                        </ul>
+                    </div>
                 }
             </div>
         );

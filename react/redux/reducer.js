@@ -1,3 +1,5 @@
+import update from 'react-addons-update';
+
 const
     user = (state = {}, action) => {
         switch (action.type) {
@@ -6,13 +8,20 @@ const
         }
         return state;
     }
-    , users = (state = {}, action) => {
+    , users = (state = {idleUsers: [], activeUsers: []}, action) => {
         switch (action.type) {
             case 'CHAT_SERVER_CONNECTED':
-            console.log(action.payload);
                 return action.payload;
             case 'UPDATE_USERS':
                 return action.payload;
+        }
+        return state;
+    }
+    , muted = (state = {}, action) => {
+        switch (action.type) {
+            case 'TOGGLE_MUTE':
+                const userMuteState = state[action.payload];
+                return {...state, [action.payload]: !userMuteState};
         }
         return state;
     }
@@ -47,8 +56,10 @@ const
         switch (action.type) {
             case 'INCOMING_MESSAGE':
                 return [...state, action.payload];
+            case 'INCOMING_MESSAGES':
+                return [...action.payload, ...state];
         }
         return state;
     };
 
-export {user, users, chatServer, chatInput, socket, messages};
+export {user, users, muted, chatServer, chatInput, socket, messages};

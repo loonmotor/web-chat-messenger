@@ -23,7 +23,7 @@
 .materialize-red-text.text-lighten-3 {
   color: #f3989b !important; }
 
-.materialize-red.lighten-2, .materialize-red.my-message {
+.materialize-red.lighten-2, .panel-chats .chat-messages .materialize-red.my-message {
   background-color: #ee6e73 !important; }
 
 .materialize-red-text.text-lighten-2 {
@@ -83,7 +83,7 @@
 .red-text.text-lighten-3 {
   color: #EF9A9A !important; }
 
-.red.lighten-2, .red.my-message {
+.red.lighten-2, .panel-chats .chat-messages .red.my-message {
   background-color: #E57373 !important; }
 
 .red-text.text-lighten-2 {
@@ -167,7 +167,7 @@
 .pink-text.text-lighten-3 {
   color: #f48fb1 !important; }
 
-.pink.lighten-2, .pink.my-message {
+.pink.lighten-2, .panel-chats .chat-messages .pink.my-message {
   background-color: #f06292 !important; }
 
 .pink-text.text-lighten-2 {
@@ -251,7 +251,7 @@
 .purple-text.text-lighten-3 {
   color: #ce93d8 !important; }
 
-.purple.lighten-2, .purple.my-message {
+.purple.lighten-2, .panel-chats .chat-messages .purple.my-message {
   background-color: #ba68c8 !important; }
 
 .purple-text.text-lighten-2 {
@@ -335,7 +335,7 @@
 .deep-purple-text.text-lighten-3 {
   color: #b39ddb !important; }
 
-.deep-purple.lighten-2, .deep-purple.my-message {
+.deep-purple.lighten-2, .panel-chats .chat-messages .deep-purple.my-message {
   background-color: #9575cd !important; }
 
 .deep-purple-text.text-lighten-2 {
@@ -419,7 +419,7 @@
 .indigo-text.text-lighten-3 {
   color: #9fa8da !important; }
 
-.indigo.lighten-2, .indigo.my-message {
+.indigo.lighten-2, .panel-chats .chat-messages .indigo.my-message {
   background-color: #7986cb !important; }
 
 .indigo-text.text-lighten-2 {
@@ -479,85 +479,85 @@
 .indigo-text.text-accent-4 {
   color: #304ffe !important; }
 
-.blue, .my-message {
+.blue, .panel-chats .chat-messages .my-message {
   background-color: #2196F3 !important; }
 
 .blue-text {
   color: #2196F3 !important; }
 
-.blue.lighten-5, .lighten-5.my-message {
+.blue.lighten-5, .panel-chats .chat-messages .lighten-5.my-message {
   background-color: #E3F2FD !important; }
 
 .blue-text.text-lighten-5 {
   color: #E3F2FD !important; }
 
-.blue.lighten-4, .lighten-4.my-message {
+.blue.lighten-4, .panel-chats .chat-messages .lighten-4.my-message {
   background-color: #BBDEFB !important; }
 
 .blue-text.text-lighten-4 {
   color: #BBDEFB !important; }
 
-.blue.lighten-3, .lighten-3.my-message {
+.blue.lighten-3, .panel-chats .chat-messages .lighten-3.my-message {
   background-color: #90CAF9 !important; }
 
 .blue-text.text-lighten-3 {
   color: #90CAF9 !important; }
 
-.blue.lighten-2, .my-message {
+.blue.lighten-2, .panel-chats .chat-messages .my-message {
   background-color: #64B5F6 !important; }
 
 .blue-text.text-lighten-2 {
   color: #64B5F6 !important; }
 
-.blue.lighten-1, .lighten-1.my-message {
+.blue.lighten-1, .panel-chats .chat-messages .lighten-1.my-message {
   background-color: #42A5F5 !important; }
 
 .blue-text.text-lighten-1 {
   color: #42A5F5 !important; }
 
-.blue.darken-1, .darken-1.my-message {
+.blue.darken-1, .panel-chats .chat-messages .darken-1.my-message {
   background-color: #1E88E5 !important; }
 
 .blue-text.text-darken-1 {
   color: #1E88E5 !important; }
 
-.blue.darken-2, .darken-2.my-message {
+.blue.darken-2, .panel-chats .chat-messages .darken-2.my-message {
   background-color: #1976D2 !important; }
 
 .blue-text.text-darken-2 {
   color: #1976D2 !important; }
 
-.blue.darken-3, .darken-3.my-message {
+.blue.darken-3, .panel-chats .chat-messages .darken-3.my-message {
   background-color: #1565C0 !important; }
 
 .blue-text.text-darken-3 {
   color: #1565C0 !important; }
 
-.blue.darken-4, .darken-4.my-message {
+.blue.darken-4, .panel-chats .chat-messages .darken-4.my-message {
   background-color: #0D47A1 !important; }
 
 .blue-text.text-darken-4 {
   color: #0D47A1 !important; }
 
-.blue.accent-1, .accent-1.my-message {
+.blue.accent-1, .panel-chats .chat-messages .accent-1.my-message {
   background-color: #82B1FF !important; }
 
 .blue-text.text-accent-1 {
   color: #82B1FF !important; }
 
-.blue.accent-2, .accent-2.my-message {
+.blue.accent-2, .panel-chats .chat-messages .accent-2.my-message {
   background-color: #448AFF !important; }
 
 .blue-text.text-accent-2 {
   color: #448AFF !important; }
 
-.blue.accent-3, .accent-3.my-message {
+.blue.accent-3, .panel-chats .chat-messages .accent-3.my-message {
   background-color: #2979FF !important; }
 
 .blue-text.text-accent-3 {
   color: #2979FF !important; }
 
-.blue.accent-4, .accent-4.my-message {
+.blue.accent-4, .panel-chats .chat-messages .accent-4.my-message {
   background-color: #2962FF !important; }
 
 .blue-text.text-accent-4 {
@@ -587,7 +587,7 @@
 .light-blue-text.text-lighten-3 {
   color: #81d4fa !important; }
 
-.light-blue.lighten-2, .light-blue.my-message {
+.light-blue.lighten-2, .panel-chats .chat-messages .light-blue.my-message {
   background-color: #4fc3f7 !important; }
 
 .light-blue-text.text-lighten-2 {
@@ -671,7 +671,7 @@
 .cyan-text.text-lighten-3 {
   color: #80deea !important; }
 
-.cyan.lighten-2, .cyan.my-message {
+.cyan.lighten-2, .panel-chats .chat-messages .cyan.my-message {
   background-color: #4dd0e1 !important; }
 
 .cyan-text.text-lighten-2 {
@@ -755,7 +755,7 @@
 .teal-text.text-lighten-3 {
   color: #80cbc4 !important; }
 
-.teal.lighten-2, .teal.my-message {
+.teal.lighten-2, .panel-chats .chat-messages .teal.my-message {
   background-color: #4db6ac !important; }
 
 .teal-text.text-lighten-2 {
@@ -839,7 +839,7 @@
 .green-text.text-lighten-3 {
   color: #A5D6A7 !important; }
 
-.green.lighten-2, .green.my-message {
+.green.lighten-2, .panel-chats .chat-messages .green.my-message {
   background-color: #81C784 !important; }
 
 .green-text.text-lighten-2 {
@@ -923,7 +923,7 @@
 .light-green-text.text-lighten-3 {
   color: #c5e1a5 !important; }
 
-.light-green.lighten-2, .light-green.my-message {
+.light-green.lighten-2, .panel-chats .chat-messages .light-green.my-message {
   background-color: #aed581 !important; }
 
 .light-green-text.text-lighten-2 {
@@ -1007,7 +1007,7 @@
 .lime-text.text-lighten-3 {
   color: #e6ee9c !important; }
 
-.lime.lighten-2, .lime.my-message {
+.lime.lighten-2, .panel-chats .chat-messages .lime.my-message {
   background-color: #dce775 !important; }
 
 .lime-text.text-lighten-2 {
@@ -1091,7 +1091,7 @@
 .yellow-text.text-lighten-3 {
   color: #fff59d !important; }
 
-.yellow.lighten-2, .yellow.my-message {
+.yellow.lighten-2, .panel-chats .chat-messages .yellow.my-message {
   background-color: #fff176 !important; }
 
 .yellow-text.text-lighten-2 {
@@ -1175,7 +1175,7 @@
 .amber-text.text-lighten-3 {
   color: #ffe082 !important; }
 
-.amber.lighten-2, .amber.my-message {
+.amber.lighten-2, .panel-chats .chat-messages .amber.my-message {
   background-color: #ffd54f !important; }
 
 .amber-text.text-lighten-2 {
@@ -1259,7 +1259,7 @@
 .orange-text.text-lighten-3 {
   color: #ffcc80 !important; }
 
-.orange.lighten-2, .orange.my-message {
+.orange.lighten-2, .panel-chats .chat-messages .orange.my-message {
   background-color: #ffb74d !important; }
 
 .orange-text.text-lighten-2 {
@@ -1343,7 +1343,7 @@
 .deep-orange-text.text-lighten-3 {
   color: #ffab91 !important; }
 
-.deep-orange.lighten-2, .deep-orange.my-message {
+.deep-orange.lighten-2, .panel-chats .chat-messages .deep-orange.my-message {
   background-color: #ff8a65 !important; }
 
 .deep-orange-text.text-lighten-2 {
@@ -1427,7 +1427,7 @@
 .brown-text.text-lighten-3 {
   color: #bcaaa4 !important; }
 
-.brown.lighten-2, .brown.my-message {
+.brown.lighten-2, .panel-chats .chat-messages .brown.my-message {
   background-color: #a1887f !important; }
 
 .brown-text.text-lighten-2 {
@@ -1487,7 +1487,7 @@
 .blue-grey-text.text-lighten-3 {
   color: #b0bec5 !important; }
 
-.blue-grey.lighten-2, .blue-grey.my-message {
+.blue-grey.lighten-2, .panel-chats .chat-messages .blue-grey.my-message {
   background-color: #90a4ae !important; }
 
 .blue-grey-text.text-lighten-2 {
@@ -1547,7 +1547,7 @@
 .grey-text.text-lighten-3 {
   color: #eeeeee !important; }
 
-.grey.lighten-2, .grey.my-message {
+.grey.lighten-2, .panel-chats .chat-messages .grey.my-message {
   background-color: #e0e0e0 !important; }
 
 .grey-text.text-lighten-2 {
@@ -6910,17 +6910,24 @@ button.picker__today:focus, button.picker__clear:focus, button.picker__close:foc
   height: 100%;
   overflow-y: auto;
   border-right: 1px solid silver; }
+  .panel-users .mute {
+    transform: scale(0.8); }
+  .panel-users .collection .collection-item.avatar {
+    min-height: 64px; }
+  .panel-users .collection.active-users .collection-item {
+    background: #fff59d; }
 
 .panel-chats {
   padding: 0 0 50px 0 !important; }
-
-.chat-messages {
-  position: fixed;
-  height: 80%;
-  width: inherit;
-  overflow-y: auto;
-  border-bottom: 1px solid silver;
-  margin-bottom: 40px; }
+  .panel-chats .chat-messages {
+    position: fixed;
+    height: 80%;
+    width: inherit;
+    overflow-y: auto;
+    border-bottom: 1px solid silver;
+    margin-bottom: 40px; }
+    .panel-chats .chat-messages .message-timestamp {
+      float: right; }
 
 .message-input {
   position: fixed;
@@ -6928,9 +6935,6 @@ button.picker__today:focus, button.picker__clear:focus, button.picker__close:foc
   height: 20%;
   bottom: -20px;
   background: white; }
-
-.message-timestamp {
-  float: right; }
 
 .facebook-login {
   position: fixed;
@@ -6941,12 +6945,6 @@ button.picker__today:focus, button.picker__clear:focus, button.picker__close:foc
   background: rgba(0, 0, 0, 0.8);
   z-index: 1;
   display: block; }
-
-.collection .collection-item.avatar {
-  min-height: 64px; }
-
-.collection.active-users .collection-item {
-  background: #fff59d; }
 
 .clear {
   clear: both; }

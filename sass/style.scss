@@ -6,23 +6,37 @@
     height: 100%;
     overflow-y: auto;
     border-right: 1px solid silver;
+    .mute {
+        transform: scale(0.8);
+    }
+    .collection {
+        .collection-item.avatar {
+            min-height: 64px;
+        }
+        &.active-users {
+            .collection-item {
+                background: #fff59d;
+            }
+        }
+    }
 }
 
 .panel-chats {
     padding: 0 0 50px 0 !important;
-}
-
-.chat-messages {
-    position: fixed;
-    height: 80%;
-    width: inherit;
-    overflow-y: auto;
-    border-bottom: 1px solid silver;
-    margin-bottom: 40px;
-}
-
-.my-message {
-    @extend .blue, .lighten-2
+    .chat-messages {
+        position: fixed;
+        height: 80%;
+        width: inherit;
+        overflow-y: auto;
+        border-bottom: 1px solid silver;
+        margin-bottom: 40px;
+        .my-message {
+            @extend .blue, .lighten-2
+        }
+        .message-timestamp {
+            float: right;
+        }
+    }
 }
 
 .message-input {
@@ -31,10 +45,6 @@
     height: 20%;
     bottom: -20px;
     background: white;
-}
-
-.message-timestamp {
-    float: right;
 }
 
 .facebook-login {
@@ -46,17 +56,6 @@
     background: rgba(0,0,0,0.8);
     z-index: 1;
     display: block;
-}
-
-.collection {
-    .collection-item.avatar {
-        min-height: 64px;
-    }
-    &.active-users {
-        .collection-item {
-            background: #fff59d;
-        }
-    }
 }
 
 .clear {
