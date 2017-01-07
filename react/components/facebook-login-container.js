@@ -2,7 +2,6 @@ import React, {Component} from 'react';
 import FacebookLogin from 'react-facebook-login';
 import {connect} from 'react-redux';
 import {signInUser} from '../redux/action';
-import cookie from 'react-cookie';
 
 @connect(store => ({
     chatServer: store.chatServer
