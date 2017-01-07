@@ -1,6 +1,8 @@
 @import 'Materialize/materialize';
 @import 'Css-Loader/css-loader';
 
+/* Users panel
+   ========================================================================== */
 .panel-users {
     position: fixed;
     height: 100%;
@@ -21,6 +23,8 @@
     }
 }
 
+/* Chats Panel
+   ========================================================================== */
 .panel-chats {
     padding: 0 0 50px 0 !important;
     .chat-messages {
@@ -39,6 +43,8 @@
     }
 }
 
+/* Input panel
+   ========================================================================== */
 .message-input {
     position: fixed;
     width: inherit;
@@ -47,6 +53,8 @@
     background: white;
 }
 
+/* Facebook login
+   ========================================================================== */
 .facebook-login {
     position: fixed;
     padding: 30px 0 0 0;
@@ -58,6 +66,8 @@
     display: block;
 }
 
+/* Utilities
+   ========================================================================== */
 .clear {
     clear: both;
 }
