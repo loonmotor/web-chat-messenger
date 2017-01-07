@@ -5,15 +5,16 @@ const
     , async = require('async')
     , uniqid = require('uniqid')
     , moment = require('moment')
-    , db = require('mongojs')('mongodb://127.0.0.1:27017/chat', ['chat'])
+    , argv = require('minimist')(process.argv.slice(2))
+    , db = require('mongojs')(argv.mongoUrl || 'mongodb://127.0.0.1:27017/chat', ['chat'])
     , socketEventsHandler = io => socket => ({
         signInUser: (user, callback) => {
             const
                 {email, id, name, picture: {data: {url: pictureUrl}}} = user;
             socket.user = user;
             redis.multi()
-                .set('user:' + id, JSON.stringify({email, id, name, pictureUrl}))
-                .zadd('users', 0, 'user:' + id)
+                .set(`user:${id}`, JSON.stringify({email, id, name, pictureUrl}))
+                .zadd('users', 0, `user:${id}`)
                 .zrevrangebyscore('users', Date.now(), Date.now() - ms('60s'))
                 .zrevrangebyscore('users', Date.now() - ms('60s') - 1, 0)
                 .exec()
@@ -41,7 +42,7 @@ const
                                 user: {
                                     name: 'Chatbot'
                                 },
-                                content: name + ' has signed in',
+                                content: `${name} has signed in`,
                                 id: uniqid(),
                                 sent: moment().toISOString()
                             });
@@ -61,7 +62,7 @@ const
                     const
                         {id} = msg.user;
                     redis.multi()
-                        .zadd('users', Date.now(), 'user:' + id)
+                        .zadd('users', Date.now(), `user:${id}`)
                         .zrevrangebyscore('users', Date.now(), Date.now() - ms('60s'))
                         .zrevrangebyscore('users', Date.now() - ms('60s') - 1, 0)
                         .exec()
@@ -110,22 +111,13 @@ const
             if (socket.user) {
                 const
                     {email, id, name, picture: {data: {url: pictureUrl}}} = socket.user;
-                console.log('user:' + id);
                 redis.multi()
-                    .del('user:' + id)
-                    .zrem('users', 'user:' + id)
+                    .del(`user:${id}`)
+                    .zrem('users', `user:${id}`)
                     .zrevrangebyscore('users', Date.now(), Date.now() - ms('60s'))
                     .zrevrangebyscore('users', Date.now() - ms('60s') - 1, 0)
                     .exec()
                     .then(replies => {
-                        // console.log(replies);
-                        // socketEventsHandler(io)(socket).message({
-                        //     user: Object.assign({}, socket.user, {name: 'Chatbot'}),
-                        //     content: name + ' has signed out',
-                        //     sent: moment().toISOString(),
-                        //     id: uniqid()
-                        // });
-
                         const
                             activeUserKeys = replies[2][1].length > 0 && replies[2][1] || ''
                             , idleUserKeys = replies[3][1].length > 0 && replies[3][1] || '';
@@ -136,7 +128,6 @@ const
                                 if (idleUsers[0] === null) idleUsers = [];
                                 activeUsers = activeUsers.map(user => JSON.parse(user));
                                 idleUsers = idleUsers.map(user => JSON.parse(user));
-                                console.log(activeUsers.length, idleUsers.length);
                                 io.emit('updateUsers', {
                                     activeUsers,
                                     idleUsers
@@ -145,7 +136,7 @@ const
                                     user: {
                                         name: 'Chatbot'
                                     },
-                                    content: name + ' has signed out',
+                                    content: `${name} has signed out`,
                                     id: uniqid(),
                                     sent: moment().toISOString()
                                 });

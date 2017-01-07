@@ -13,7 +13,6 @@ import _ from 'lodash';
 export default class PanelUsers extends Component {
     componentDidMount() {
         this.props.socket.on('updateUsers', users => {
-            console.log(users);
             this.props.dispatch(updateUsers(users));
         });
     }

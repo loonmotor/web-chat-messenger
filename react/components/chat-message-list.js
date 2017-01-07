@@ -15,7 +15,6 @@ export default class ChatMessageList extends Component {
         });
     }
     render() {
-        console.log(this.props.messages);
         return (
             <div className="row chat-messages">
                 <div className="col s12">

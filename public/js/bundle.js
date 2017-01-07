@@ -58,16 +58,22 @@
 
 	var _app2 = _interopRequireDefault(_app);
 
-	var _store = __webpack_require__(392);
+	var _store = __webpack_require__(341);
 
 	var _store2 = _interopRequireDefault(_store);
 
+	var _socket = __webpack_require__(356);
+
+	var _socket2 = _interopRequireDefault(_socket);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var socket = (0, _socket2.default)('http://localhost:3000');
 
 	(0, _reactDom.render)(_react2.default.createElement(
 	    _reactRedux.Provider,
 	    { store: _store2.default },
-	    _react2.default.createElement(_app2.default, null)
+	    _react2.default.createElement(_app2.default, { socket: socket })
 	), document.getElementById('app'));
 
 /***/ },
@@ -23739,13 +23745,9 @@
 
 	var _facebookLoginContainer2 = _interopRequireDefault(_facebookLoginContainer);
 
-	var _socket = __webpack_require__(339);
-
-	var _socket2 = _interopRequireDefault(_socket);
-
 	var _action = __webpack_require__(219);
 
-	var _reactNotifyToast = __webpack_require__(390);
+	var _reactNotifyToast = __webpack_require__(339);
 
 	var _reactNotifyToast2 = _interopRequireDefault(_reactNotifyToast);
 
@@ -23764,13 +23766,23 @@
 	}), _dec(_class = function (_Component) {
 	    _inherits(App, _Component);
 
+	    _createClass(App, [{
+	        key: 'componentDidMount',
+	        value: function componentDidMount() {
+	            var _this2 = this;
+
+	            this.props.socket.on('messages', function (messages) {
+	                _this2.props.dispatch((0, _action.incomingMessages)(messages));
+	            });
+	        }
+	    }]);
+
 	    function App(props) {
 	        _classCallCheck(this, App);
 
 	        var _this = _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).call(this, props));
 
-	        var socket = (0, _socket2.default)('http://localhost:3000');
-	        _this.props.dispatch((0, _action.registerSocket)(socket));
+	        _this.props.dispatch((0, _action.registerSocket)(_this.props.socket));
 	        return _this;
 	    }
 
@@ -23856,7 +23868,6 @@
 	            var _this2 = this;
 
 	            this.props.socket.on('updateUsers', function (users) {
-	                console.log(users);
 	                _this2.props.dispatch((0, _action.updateUsers)(users));
 	            });
 	        }
@@ -24052,6 +24063,12 @@
 	        payload: message
 	    };
 	},
+	    incomingMessages = function incomingMessages(messages) {
+	    return {
+	        type: 'INCOMING_MESSAGES',
+	        payload: messages
+	    };
+	},
 	    toggleMute = function toggleMute(userId) {
 	    return {
 	        type: 'TOGGLE_MUTE',
@@ -24066,6 +24083,7 @@
 	exports.registerSocket = registerSocket;
 	exports.clearInput = clearInput;
 	exports.incomingMessage = incomingMessage;
+	exports.incomingMessages = incomingMessages;
 	exports.toggleMute = toggleMute;
 
 /***/ },
@@ -56833,15 +56851,1847 @@
 /* 339 */
 /***/ function(module, exports, __webpack_require__) {
 
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+		value: true
+	});
+	exports.notify = undefined;
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _reactDom = __webpack_require__(32);
+
+	var _reactDom2 = _interopRequireDefault(_reactDom);
+
+	var _objectAssign = __webpack_require__(340);
+
+	var _objectAssign2 = _interopRequireDefault(_objectAssign);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var notificationWrapperId = 'notification-wrapper';
+	var defaultTimeout = 5000; // ms
+	var animationDuration = 300; // ms
+
+	/* Colors */
+	var colorWhite = 'white';
+	var colorError = '#E85742';
+	var colorSuccess = '#55CA92';
+	var colorWarning = '#F5E273';
+	var textColorWarning = '#333333';
+
+	/* React Notification Component */
+
+	var Toast = function (_React$Component) {
+		_inherits(Toast, _React$Component);
+
+		function Toast() {
+			var _ref;
+
+			var _temp, _this, _ret;
+
+			_classCallCheck(this, Toast);
+
+			for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+				args[_key] = arguments[_key];
+			}
+
+			return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref = Toast.__proto__ || Object.getPrototypeOf(Toast)).call.apply(_ref, [this].concat(args))), _this), _this.state = {
+				styleParent: null
+			}, _temp), _possibleConstructorReturn(_this, _ret);
+		}
+
+		_createClass(Toast, [{
+			key: 'getStyles',
+			value: function getStyles() {
+				var styles = {};
+
+				var containerStyle = {
+					position: 'fixed',
+					width: '50%',
+					margin: '0 auto',
+					right: '0px',
+					top: '-100px',
+					left: '0px',
+					textAlign: 'center',
+					zIndex: '999',
+					pointerEvents: 'none',
+					transition: 'all ' + animationDuration + 'ms ease',
+					transform: 'translateY(0px)',
+					// Vendor Prefixes
+					msTransition: 'all ' + animationDuration + 'ms ease',
+					msTransform: 'translateY(0px)',
+					WebkitTransition: 'all ' + animationDuration + 'ms ease',
+					WebkitTransform: 'translateY(0px)',
+					OTransition: 'all ' + animationDuration + 'ms ease',
+					OTransform: 'translateY(0px)',
+					MozTransition: 'all ' + animationDuration + 'ms ease',
+					MozTransform: 'translateY(0px)'
+				};
+
+				var contentStyle = {
+					cursor: 'pointer',
+					display: 'inline',
+					width: 'auto',
+					borderRadius: '0 0 4px 4px',
+					backgroundColor: 'white',
+					padding: '10px 30px',
+					pointerEvents: 'all'
+				};
+
+				/* If type is set, merge toast action styles with base */
+				switch (this.props.type) {
+					case 'success':
+						var successStyle = {
+							backgroundColor: colorSuccess,
+							color: colorWhite
+						};
+						styles.content = (0, _objectAssign2.default)({}, contentStyle, successStyle);
+						break;
+
+					case 'error':
+						var errorStyle = {
+							backgroundColor: colorError,
+							color: colorWhite
+						};
+						styles.content = (0, _objectAssign2.default)({}, contentStyle, errorStyle);
+						break;
+
+					case 'warning':
+						var warningStyle = {
+							backgroundColor: colorWarning,
+							color: textColorWarning
+						};
+						styles.content = (0, _objectAssign2.default)({}, contentStyle, warningStyle);
+						break;
+
+					case 'custom':
+						var customStyle = {
+							backgroundColor: this.props.color.background,
+							color: this.props.color.text
+						};
+						styles.content = (0, _objectAssign2.default)({}, contentStyle, customStyle);
+						break;
+
+					default:
+						styles.content = (0, _objectAssign2.default)({}, contentStyle);
+						break;
+				}
+
+				styles.container = containerStyle;
+
+				return styles;
+			}
+		}, {
+			key: 'getVisibleState',
+			value: function getVisibleState(context) {
+				var base = this.getStyles().container;
+
+				// Show
+				var stylesShow = {
+					transform: 'translateY(108px)',
+					msTransform: 'translateY(108px)',
+					WebkitTransform: 'translateY(108px)',
+					OTransform: 'translateY(108px)',
+					MozTransform: 'translateY(108px)'
+				};
+
+				setTimeout(function () {
+					context.updateStyle(base, stylesShow);
+				}, 100); // wait 100ms after the component is called to animate toast.
+
+				if (this.props.timeout === -1) {
+					return;
+				}
+
+				// Hide after timeout
+				var stylesHide = {
+					transform: 'translateY(-108px)',
+					msTransform: 'translateY(-108px)',
+					WebkitTransform: 'translateY(-108px)',
+					OTransform: 'translateY(-108px)',
+					MozTransform: 'translateY(-108px)'
+				};
+
+				setTimeout(function () {
+					context.updateStyle(base, stylesHide);
+				}, this.props.timeout);
+			}
+		}, {
+			key: 'updateStyle',
+			value: function updateStyle(base, update) {
+				this.setState({ styleParent: (0, _objectAssign2.default)({}, base, update) });
+			}
+		}, {
+			key: 'getBaseStyle',
+			value: function getBaseStyle() {
+				this.setState({ styleParent: this.getStyles().container });
+			}
+		}, {
+			key: 'componentDidMount',
+			value: function componentDidMount() {
+				this.getBaseStyle();
+				this.getVisibleState(this);
+			}
+		}, {
+			key: 'render',
+			value: function render() {
+				var _props = this.props,
+				    text = _props.text,
+				    type = _props.type;
+
+				var styles = this.getStyles();
+				var styleParent = this.state.styleParent;
+
+				return _react2.default.createElement(
+					'div',
+					{ className: 'toast-notification', style: styleParent },
+					_react2.default.createElement(
+						'span',
+						{ className: type, style: styles.content },
+						text
+					)
+				);
+			}
+		}]);
+
+		return Toast;
+	}(_react2.default.Component);
+
+	/* Private Functions */
+
+	/* Render React component */
+
+
+	Toast.propTypes = {
+		text: _react.PropTypes.string,
+		timeout: _react.PropTypes.number,
+		type: _react.PropTypes.string,
+		color: _react.PropTypes.object,
+		style: _react.PropTypes.oneOfType([_react.PropTypes.object, _react.PropTypes.bool])
+	};
+	function renderToast(text, type, timeout, color) {
+		_reactDom2.default.render(_react2.default.createElement(Toast, { text: text, timeout: timeout, type: type, color: color }), document.getElementById(notificationWrapperId));
+	}
+
+	/* Unmount React component */
+	function hideToast() {
+		_reactDom2.default.unmountComponentAtNode(document.getElementById(notificationWrapperId));
+	}
+
+	/* Public functions */
+
+	/* Show Animated Toast Message */
+	function show(text, type, timeout, color) {
+		if (!document.getElementById(notificationWrapperId).hasChildNodes()) {
+			var renderTimeout = timeout;
+
+			// Use default timeout if not set.
+			if (!renderTimeout) {
+				renderTimeout = defaultTimeout;
+			}
+
+			// Render Component with Props.
+			renderToast(text, type, renderTimeout, color);
+
+			if (timeout === -1) {
+				return;
+			}
+
+			// Unmount react component after the animation finished.
+			setTimeout(function () {
+				hideToast();
+			}, renderTimeout + animationDuration);
+		}
+	}
+
+	/* Export notification container */
+
+	var _class = function (_React$Component2) {
+		_inherits(_class, _React$Component2);
+
+		function _class() {
+			_classCallCheck(this, _class);
+
+			return _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).apply(this, arguments));
+		}
+
+		_createClass(_class, [{
+			key: 'render',
+			value: function render() {
+				return _react2.default.createElement('div', { id: notificationWrapperId });
+			}
+		}]);
+
+		return _class;
+	}(_react2.default.Component);
+
+	/* Export notification functions */
+
+
+	exports.default = _class;
+	var notify = exports.notify = {
+		show: show
+	};
+
+/***/ },
+/* 340 */
+/***/ function(module, exports) {
+
+	'use strict';
+	var propIsEnumerable = Object.prototype.propertyIsEnumerable;
+
+	function ToObject(val) {
+		if (val == null) {
+			throw new TypeError('Object.assign cannot be called with null or undefined');
+		}
+
+		return Object(val);
+	}
+
+	function ownEnumerableKeys(obj) {
+		var keys = Object.getOwnPropertyNames(obj);
+
+		if (Object.getOwnPropertySymbols) {
+			keys = keys.concat(Object.getOwnPropertySymbols(obj));
+		}
+
+		return keys.filter(function (key) {
+			return propIsEnumerable.call(obj, key);
+		});
+	}
+
+	module.exports = Object.assign || function (target, source) {
+		var from;
+		var keys;
+		var to = ToObject(target);
+
+		for (var s = 1; s < arguments.length; s++) {
+			from = arguments[s];
+			keys = ownEnumerableKeys(Object(from));
+
+			for (var i = 0; i < keys.length; i++) {
+				to[keys[i]] = from[keys[i]];
+			}
+		}
+
+		return to;
+	};
+
+
+/***/ },
+/* 341 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	var _redux = __webpack_require__(189);
+
+	var _reduxLogger = __webpack_require__(342);
+
+	var _reduxLogger2 = _interopRequireDefault(_reduxLogger);
+
+	var _reduxThunk = __webpack_require__(348);
+
+	var _reduxThunk2 = _interopRequireDefault(_reduxThunk);
+
+	var _reduxPromiseMiddleware = __webpack_require__(349);
+
+	var _reduxPromiseMiddleware2 = _interopRequireDefault(_reduxPromiseMiddleware);
+
+	var _reducer = __webpack_require__(351);
+
+	var reducers = _interopRequireWildcard(_reducer);
+
+	var _middleware = __webpack_require__(354);
+
+	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var reducer = (0, _redux.combineReducers)(_extends({}, reducers)),
+	    middleware = (0, _redux.applyMiddleware)((0, _reduxLogger2.default)(), _middleware.webSocket, _middleware.chatMessageScroll, _reduxThunk2.default, (0, _reduxPromiseMiddleware2.default)());
+
+	exports.default = (0, _redux.createStore)(reducer, middleware);
+
+/***/ },
+/* 342 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _core = __webpack_require__(343);
+
+	var _helpers = __webpack_require__(344);
+
+	var _defaults = __webpack_require__(347);
+
+	var _defaults2 = _interopRequireDefault(_defaults);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	/**
+	 * Creates logger with following options
+	 *
+	 * @namespace
+	 * @param {object} options - options for logger
+	 * @param {string | function | object} options.level - console[level]
+	 * @param {boolean} options.duration - print duration of each action?
+	 * @param {boolean} options.timestamp - print timestamp with each action?
+	 * @param {object} options.colors - custom colors
+	 * @param {object} options.logger - implementation of the `console` API
+	 * @param {boolean} options.logErrors - should errors in action execution be caught, logged, and re-thrown?
+	 * @param {boolean} options.collapsed - is group collapsed?
+	 * @param {boolean} options.predicate - condition which resolves logger behavior
+	 * @param {function} options.stateTransformer - transform state before print
+	 * @param {function} options.actionTransformer - transform action before print
+	 * @param {function} options.errorTransformer - transform error before print
+	 *
+	 * @returns {function} logger middleware
+	 */
+	function createLogger() {
+	  var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
+	  var loggerOptions = _extends({}, _defaults2.default, options);
+
+	  var logger = loggerOptions.logger;
+	  var transformer = loggerOptions.transformer;
+	  var stateTransformer = loggerOptions.stateTransformer;
+	  var errorTransformer = loggerOptions.errorTransformer;
+	  var predicate = loggerOptions.predicate;
+	  var logErrors = loggerOptions.logErrors;
+	  var diffPredicate = loggerOptions.diffPredicate;
+
+	  // Return if 'console' object is not defined
+
+	  if (typeof logger === 'undefined') {
+	    return function () {
+	      return function (next) {
+	        return function (action) {
+	          return next(action);
+	        };
+	      };
+	    };
+	  }
+
+	  if (transformer) {
+	    console.error('Option \'transformer\' is deprecated, use \'stateTransformer\' instead!'); // eslint-disable-line no-console
+	  }
+
+	  var logBuffer = [];
+
+	  return function (_ref) {
+	    var getState = _ref.getState;
+	    return function (next) {
+	      return function (action) {
+	        // Exit early if predicate function returns 'false'
+	        if (typeof predicate === 'function' && !predicate(getState, action)) {
+	          return next(action);
+	        }
+
+	        var logEntry = {};
+	        logBuffer.push(logEntry);
+
+	        logEntry.started = _helpers.timer.now();
+	        logEntry.startedTime = new Date();
+	        logEntry.prevState = stateTransformer(getState());
+	        logEntry.action = action;
+
+	        var returnedValue = undefined;
+	        if (logErrors) {
+	          try {
+	            returnedValue = next(action);
+	          } catch (e) {
+	            logEntry.error = errorTransformer(e);
+	          }
+	        } else {
+	          returnedValue = next(action);
+	        }
+
+	        logEntry.took = _helpers.timer.now() - logEntry.started;
+	        logEntry.nextState = stateTransformer(getState());
+
+	        var diff = loggerOptions.diff && typeof diffPredicate === 'function' ? diffPredicate(getState, action) : loggerOptions.diff;
+
+	        (0, _core.printBuffer)(logBuffer, _extends({}, loggerOptions, { diff: diff }));
+	        logBuffer.length = 0;
+
+	        if (logEntry.error) throw logEntry.error;
+	        return returnedValue;
+	      };
+	    };
+	  };
+	}
+
+	exports.default = createLogger;
+	module.exports = exports['default'];
+
+/***/ },
+/* 343 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.printBuffer = printBuffer;
+
+	var _helpers = __webpack_require__(344);
+
+	var _diff = __webpack_require__(345);
+
+	var _diff2 = _interopRequireDefault(_diff);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+	function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
+
+	/**
+	 * Get log level string based on supplied params
+	 *
+	 * @param {string | function | object} level - console[level]
+	 * @param {object} action - selected action
+	 * @param {array} payload - selected payload
+	 * @param {string} type - log entry type
+	 *
+	 * @returns {string} level
+	 */
+	function getLogLevel(level, action, payload, type) {
+	  switch (typeof level === 'undefined' ? 'undefined' : _typeof(level)) {
+	    case 'object':
+	      return typeof level[type] === 'function' ? level[type].apply(level, _toConsumableArray(payload)) : level[type];
+	    case 'function':
+	      return level(action);
+	    default:
+	      return level;
+	  }
+	}
+
+	function defaultTitleFormatter(options) {
+	  var timestamp = options.timestamp;
+	  var duration = options.duration;
+
+	  return function (action, time, took) {
+	    var parts = ['action'];
+	    if (timestamp) {
+	      parts.push('@ ' + time);
+	    }
+	    parts.push(action.type);
+	    if (duration) {
+	      parts.push('(in ' + took.toFixed(2) + ' ms)');
+	    }
+	    return parts.join(' ');
+	  };
+	}
+
+	function printBuffer(buffer, options) {
+	  var logger = options.logger;
+	  var actionTransformer = options.actionTransformer;
+	  var _options$titleFormatt = options.titleFormatter;
+	  var titleFormatter = _options$titleFormatt === undefined ? defaultTitleFormatter(options) : _options$titleFormatt;
+	  var collapsed = options.collapsed;
+	  var colors = options.colors;
+	  var level = options.level;
+	  var diff = options.diff;
+
+	  buffer.forEach(function (logEntry, key) {
+	    var started = logEntry.started;
+	    var startedTime = logEntry.startedTime;
+	    var action = logEntry.action;
+	    var prevState = logEntry.prevState;
+	    var error = logEntry.error;
+	    var took = logEntry.took;
+	    var nextState = logEntry.nextState;
+
+	    var nextEntry = buffer[key + 1];
+
+	    if (nextEntry) {
+	      nextState = nextEntry.prevState;
+	      took = nextEntry.started - started;
+	    }
+
+	    // Message
+	    var formattedAction = actionTransformer(action);
+	    var isCollapsed = typeof collapsed === 'function' ? collapsed(function () {
+	      return nextState;
+	    }, action) : collapsed;
+
+	    var formattedTime = (0, _helpers.formatTime)(startedTime);
+	    var titleCSS = colors.title ? 'color: ' + colors.title(formattedAction) + ';' : null;
+	    var title = titleFormatter(formattedAction, formattedTime, took);
+
+	    // Render
+	    try {
+	      if (isCollapsed) {
+	        if (colors.title) logger.groupCollapsed('%c ' + title, titleCSS);else logger.groupCollapsed(title);
+	      } else {
+	        if (colors.title) logger.group('%c ' + title, titleCSS);else logger.group(title);
+	      }
+	    } catch (e) {
+	      logger.log(title);
+	    }
+
+	    var prevStateLevel = getLogLevel(level, formattedAction, [prevState], 'prevState');
+	    var actionLevel = getLogLevel(level, formattedAction, [formattedAction], 'action');
+	    var errorLevel = getLogLevel(level, formattedAction, [error, prevState], 'error');
+	    var nextStateLevel = getLogLevel(level, formattedAction, [nextState], 'nextState');
+
+	    if (prevStateLevel) {
+	      if (colors.prevState) logger[prevStateLevel]('%c prev state', 'color: ' + colors.prevState(prevState) + '; font-weight: bold', prevState);else logger[prevStateLevel]('prev state', prevState);
+	    }
+
+	    if (actionLevel) {
+	      if (colors.action) logger[actionLevel]('%c action', 'color: ' + colors.action(formattedAction) + '; font-weight: bold', formattedAction);else logger[actionLevel]('action', formattedAction);
+	    }
+
+	    if (error && errorLevel) {
+	      if (colors.error) logger[errorLevel]('%c error', 'color: ' + colors.error(error, prevState) + '; font-weight: bold', error);else logger[errorLevel]('error', error);
+	    }
+
+	    if (nextStateLevel) {
+	      if (colors.nextState) logger[nextStateLevel]('%c next state', 'color: ' + colors.nextState(nextState) + '; font-weight: bold', nextState);else logger[nextStateLevel]('next state', nextState);
+	    }
+
+	    if (diff) {
+	      (0, _diff2.default)(prevState, nextState, logger, isCollapsed);
+	    }
+
+	    try {
+	      logger.groupEnd();
+	    } catch (e) {
+	      logger.log('—— log end ——');
+	    }
+	  });
+	}
+
+/***/ },
+/* 344 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	var repeat = exports.repeat = function repeat(str, times) {
+	  return new Array(times + 1).join(str);
+	};
+
+	var pad = exports.pad = function pad(num, maxLength) {
+	  return repeat("0", maxLength - num.toString().length) + num;
+	};
+
+	var formatTime = exports.formatTime = function formatTime(time) {
+	  return pad(time.getHours(), 2) + ":" + pad(time.getMinutes(), 2) + ":" + pad(time.getSeconds(), 2) + "." + pad(time.getMilliseconds(), 3);
+	};
+
+	// Use performance API if it's available in order to get better precision
+	var timer = exports.timer = typeof performance !== "undefined" && performance !== null && typeof performance.now === "function" ? performance : Date;
+
+/***/ },
+/* 345 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.default = diffLogger;
+
+	var _deepDiff = __webpack_require__(346);
+
+	var _deepDiff2 = _interopRequireDefault(_deepDiff);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	// https://github.com/flitbit/diff#differences
+	var dictionary = {
+	  'E': {
+	    color: '#2196F3',
+	    text: 'CHANGED:'
+	  },
+	  'N': {
+	    color: '#4CAF50',
+	    text: 'ADDED:'
+	  },
+	  'D': {
+	    color: '#F44336',
+	    text: 'DELETED:'
+	  },
+	  'A': {
+	    color: '#2196F3',
+	    text: 'ARRAY:'
+	  }
+	};
+
+	function style(kind) {
+	  return 'color: ' + dictionary[kind].color + '; font-weight: bold';
+	}
+
+	function render(diff) {
+	  var kind = diff.kind;
+	  var path = diff.path;
+	  var lhs = diff.lhs;
+	  var rhs = diff.rhs;
+	  var index = diff.index;
+	  var item = diff.item;
+
+	  switch (kind) {
+	    case 'E':
+	      return path.join('.') + ' ' + lhs + ' → ' + rhs;
+	    case 'N':
+	      return path.join('.') + ' ' + rhs;
+	    case 'D':
+	      return '' + path.join('.');
+	    case 'A':
+	      return [path.join('.') + '[' + index + ']', item];
+	    default:
+	      return null;
+	  }
+	}
+
+	function diffLogger(prevState, newState, logger, isCollapsed) {
+	  var diff = (0, _deepDiff2.default)(prevState, newState);
+
+	  try {
+	    if (isCollapsed) {
+	      logger.groupCollapsed('diff');
+	    } else {
+	      logger.group('diff');
+	    }
+	  } catch (e) {
+	    logger.log('diff');
+	  }
+
+	  if (diff) {
+	    diff.forEach(function (elem) {
+	      var kind = elem.kind;
+
+	      var output = render(elem);
+
+	      logger.log('%c ' + dictionary[kind].text, style(kind), output);
+	    });
+	  } else {
+	    logger.log('—— no diff ——');
+	  }
+
+	  try {
+	    logger.groupEnd();
+	  } catch (e) {
+	    logger.log('—— diff end —— ');
+	  }
+	}
+	module.exports = exports['default'];
+
+/***/ },
+/* 346 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(global) {/*!
+	 * deep-diff.
+	 * Licensed under the MIT License.
+	 */
+	;(function(root, factory) {
+	  'use strict';
+	  if (true) {
+	    // AMD. Register as an anonymous module.
+	    !(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = function() {
+	      return factory();
+	    }.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	  } else if (typeof exports === 'object') {
+	    // Node. Does not work with strict CommonJS, but
+	    // only CommonJS-like environments that support module.exports,
+	    // like Node.
+	    module.exports = factory();
+	  } else {
+	    // Browser globals (root is window)
+	    root.DeepDiff = factory();
+	  }
+	}(this, function(undefined) {
+	  'use strict';
+
+	  var $scope, conflict, conflictResolution = [];
+	  if (typeof global === 'object' && global) {
+	    $scope = global;
+	  } else if (typeof window !== 'undefined') {
+	    $scope = window;
+	  } else {
+	    $scope = {};
+	  }
+	  conflict = $scope.DeepDiff;
+	  if (conflict) {
+	    conflictResolution.push(
+	      function() {
+	        if ('undefined' !== typeof conflict && $scope.DeepDiff === accumulateDiff) {
+	          $scope.DeepDiff = conflict;
+	          conflict = undefined;
+	        }
+	      });
+	  }
+
+	  // nodejs compatible on server side and in the browser.
+	  function inherits(ctor, superCtor) {
+	    ctor.super_ = superCtor;
+	    ctor.prototype = Object.create(superCtor.prototype, {
+	      constructor: {
+	        value: ctor,
+	        enumerable: false,
+	        writable: true,
+	        configurable: true
+	      }
+	    });
+	  }
+
+	  function Diff(kind, path) {
+	    Object.defineProperty(this, 'kind', {
+	      value: kind,
+	      enumerable: true
+	    });
+	    if (path && path.length) {
+	      Object.defineProperty(this, 'path', {
+	        value: path,
+	        enumerable: true
+	      });
+	    }
+	  }
+
+	  function DiffEdit(path, origin, value) {
+	    DiffEdit.super_.call(this, 'E', path);
+	    Object.defineProperty(this, 'lhs', {
+	      value: origin,
+	      enumerable: true
+	    });
+	    Object.defineProperty(this, 'rhs', {
+	      value: value,
+	      enumerable: true
+	    });
+	  }
+	  inherits(DiffEdit, Diff);
+
+	  function DiffNew(path, value) {
+	    DiffNew.super_.call(this, 'N', path);
+	    Object.defineProperty(this, 'rhs', {
+	      value: value,
+	      enumerable: true
+	    });
+	  }
+	  inherits(DiffNew, Diff);
+
+	  function DiffDeleted(path, value) {
+	    DiffDeleted.super_.call(this, 'D', path);
+	    Object.defineProperty(this, 'lhs', {
+	      value: value,
+	      enumerable: true
+	    });
+	  }
+	  inherits(DiffDeleted, Diff);
+
+	  function DiffArray(path, index, item) {
+	    DiffArray.super_.call(this, 'A', path);
+	    Object.defineProperty(this, 'index', {
+	      value: index,
+	      enumerable: true
+	    });
+	    Object.defineProperty(this, 'item', {
+	      value: item,
+	      enumerable: true
+	    });
+	  }
+	  inherits(DiffArray, Diff);
+
+	  function arrayRemove(arr, from, to) {
+	    var rest = arr.slice((to || from) + 1 || arr.length);
+	    arr.length = from < 0 ? arr.length + from : from;
+	    arr.push.apply(arr, rest);
+	    return arr;
+	  }
+
+	  function realTypeOf(subject) {
+	    var type = typeof subject;
+	    if (type !== 'object') {
+	      return type;
+	    }
+
+	    if (subject === Math) {
+	      return 'math';
+	    } else if (subject === null) {
+	      return 'null';
+	    } else if (Array.isArray(subject)) {
+	      return 'array';
+	    } else if (Object.prototype.toString.call(subject) === '[object Date]') {
+	      return 'date';
+	    } else if (typeof subject.toString !== 'undefined' && /^\/.*\//.test(subject.toString())) {
+	      return 'regexp';
+	    }
+	    return 'object';
+	  }
+
+	  function deepDiff(lhs, rhs, changes, prefilter, path, key, stack) {
+	    path = path || [];
+	    var currentPath = path.slice(0);
+	    if (typeof key !== 'undefined') {
+	      if (prefilter) {
+	        if (typeof(prefilter) === 'function' && prefilter(currentPath, key)) { return; }
+	        else if (typeof(prefilter) === 'object') {
+	          if (prefilter.prefilter && prefilter.prefilter(currentPath, key)) { return; }
+	          if (prefilter.normalize) {
+	            var alt = prefilter.normalize(currentPath, key, lhs, rhs);
+	            if (alt) {
+	              lhs = alt[0];
+	              rhs = alt[1];
+	            }
+	          }
+	        }
+	      }
+	      currentPath.push(key);
+	    }
+
+	    // Use string comparison for regexes
+	    if (realTypeOf(lhs) === 'regexp' && realTypeOf(rhs) === 'regexp') {
+	      lhs = lhs.toString();
+	      rhs = rhs.toString();
+	    }
+
+	    var ltype = typeof lhs;
+	    var rtype = typeof rhs;
+	    if (ltype === 'undefined') {
+	      if (rtype !== 'undefined') {
+	        changes(new DiffNew(currentPath, rhs));
+	      }
+	    } else if (rtype === 'undefined') {
+	      changes(new DiffDeleted(currentPath, lhs));
+	    } else if (realTypeOf(lhs) !== realTypeOf(rhs)) {
+	      changes(new DiffEdit(currentPath, lhs, rhs));
+	    } else if (Object.prototype.toString.call(lhs) === '[object Date]' && Object.prototype.toString.call(rhs) === '[object Date]' && ((lhs - rhs) !== 0)) {
+	      changes(new DiffEdit(currentPath, lhs, rhs));
+	    } else if (ltype === 'object' && lhs !== null && rhs !== null) {
+	      stack = stack || [];
+	      if (stack.indexOf(lhs) < 0) {
+	        stack.push(lhs);
+	        if (Array.isArray(lhs)) {
+	          var i, len = lhs.length;
+	          for (i = 0; i < lhs.length; i++) {
+	            if (i >= rhs.length) {
+	              changes(new DiffArray(currentPath, i, new DiffDeleted(undefined, lhs[i])));
+	            } else {
+	              deepDiff(lhs[i], rhs[i], changes, prefilter, currentPath, i, stack);
+	            }
+	          }
+	          while (i < rhs.length) {
+	            changes(new DiffArray(currentPath, i, new DiffNew(undefined, rhs[i++])));
+	          }
+	        } else {
+	          var akeys = Object.keys(lhs);
+	          var pkeys = Object.keys(rhs);
+	          akeys.forEach(function(k, i) {
+	            var other = pkeys.indexOf(k);
+	            if (other >= 0) {
+	              deepDiff(lhs[k], rhs[k], changes, prefilter, currentPath, k, stack);
+	              pkeys = arrayRemove(pkeys, other);
+	            } else {
+	              deepDiff(lhs[k], undefined, changes, prefilter, currentPath, k, stack);
+	            }
+	          });
+	          pkeys.forEach(function(k) {
+	            deepDiff(undefined, rhs[k], changes, prefilter, currentPath, k, stack);
+	          });
+	        }
+	        stack.length = stack.length - 1;
+	      }
+	    } else if (lhs !== rhs) {
+	      if (!(ltype === 'number' && isNaN(lhs) && isNaN(rhs))) {
+	        changes(new DiffEdit(currentPath, lhs, rhs));
+	      }
+	    }
+	  }
+
+	  function accumulateDiff(lhs, rhs, prefilter, accum) {
+	    accum = accum || [];
+	    deepDiff(lhs, rhs,
+	      function(diff) {
+	        if (diff) {
+	          accum.push(diff);
+	        }
+	      },
+	      prefilter);
+	    return (accum.length) ? accum : undefined;
+	  }
+
+	  function applyArrayChange(arr, index, change) {
+	    if (change.path && change.path.length) {
+	      var it = arr[index],
+	          i, u = change.path.length - 1;
+	      for (i = 0; i < u; i++) {
+	        it = it[change.path[i]];
+	      }
+	      switch (change.kind) {
+	        case 'A':
+	          applyArrayChange(it[change.path[i]], change.index, change.item);
+	          break;
+	        case 'D':
+	          delete it[change.path[i]];
+	          break;
+	        case 'E':
+	        case 'N':
+	          it[change.path[i]] = change.rhs;
+	          break;
+	      }
+	    } else {
+	      switch (change.kind) {
+	        case 'A':
+	          applyArrayChange(arr[index], change.index, change.item);
+	          break;
+	        case 'D':
+	          arr = arrayRemove(arr, index);
+	          break;
+	        case 'E':
+	        case 'N':
+	          arr[index] = change.rhs;
+	          break;
+	      }
+	    }
+	    return arr;
+	  }
+
+	  function applyChange(target, source, change) {
+	    if (target && source && change && change.kind) {
+	      var it = target,
+	          i = -1,
+	          last = change.path ? change.path.length - 1 : 0;
+	      while (++i < last) {
+	        if (typeof it[change.path[i]] === 'undefined') {
+	          it[change.path[i]] = (typeof change.path[i] === 'number') ? [] : {};
+	        }
+	        it = it[change.path[i]];
+	      }
+	      switch (change.kind) {
+	        case 'A':
+	          applyArrayChange(change.path ? it[change.path[i]] : it, change.index, change.item);
+	          break;
+	        case 'D':
+	          delete it[change.path[i]];
+	          break;
+	        case 'E':
+	        case 'N':
+	          it[change.path[i]] = change.rhs;
+	          break;
+	      }
+	    }
+	  }
+
+	  function revertArrayChange(arr, index, change) {
+	    if (change.path && change.path.length) {
+	      // the structure of the object at the index has changed...
+	      var it = arr[index],
+	          i, u = change.path.length - 1;
+	      for (i = 0; i < u; i++) {
+	        it = it[change.path[i]];
+	      }
+	      switch (change.kind) {
+	        case 'A':
+	          revertArrayChange(it[change.path[i]], change.index, change.item);
+	          break;
+	        case 'D':
+	          it[change.path[i]] = change.lhs;
+	          break;
+	        case 'E':
+	          it[change.path[i]] = change.lhs;
+	          break;
+	        case 'N':
+	          delete it[change.path[i]];
+	          break;
+	      }
+	    } else {
+	      // the array item is different...
+	      switch (change.kind) {
+	        case 'A':
+	          revertArrayChange(arr[index], change.index, change.item);
+	          break;
+	        case 'D':
+	          arr[index] = change.lhs;
+	          break;
+	        case 'E':
+	          arr[index] = change.lhs;
+	          break;
+	        case 'N':
+	          arr = arrayRemove(arr, index);
+	          break;
+	      }
+	    }
+	    return arr;
+	  }
+
+	  function revertChange(target, source, change) {
+	    if (target && source && change && change.kind) {
+	      var it = target,
+	          i, u;
+	      u = change.path.length - 1;
+	      for (i = 0; i < u; i++) {
+	        if (typeof it[change.path[i]] === 'undefined') {
+	          it[change.path[i]] = {};
+	        }
+	        it = it[change.path[i]];
+	      }
+	      switch (change.kind) {
+	        case 'A':
+	          // Array was modified...
+	          // it will be an array...
+	          revertArrayChange(it[change.path[i]], change.index, change.item);
+	          break;
+	        case 'D':
+	          // Item was deleted...
+	          it[change.path[i]] = change.lhs;
+	          break;
+	        case 'E':
+	          // Item was edited...
+	          it[change.path[i]] = change.lhs;
+	          break;
+	        case 'N':
+	          // Item is new...
+	          delete it[change.path[i]];
+	          break;
+	      }
+	    }
+	  }
+
+	  function applyDiff(target, source, filter) {
+	    if (target && source) {
+	      var onChange = function(change) {
+	        if (!filter || filter(target, source, change)) {
+	          applyChange(target, source, change);
+	        }
+	      };
+	      deepDiff(target, source, onChange);
+	    }
+	  }
+
+	  Object.defineProperties(accumulateDiff, {
+
+	    diff: {
+	      value: accumulateDiff,
+	      enumerable: true
+	    },
+	    observableDiff: {
+	      value: deepDiff,
+	      enumerable: true
+	    },
+	    applyDiff: {
+	      value: applyDiff,
+	      enumerable: true
+	    },
+	    applyChange: {
+	      value: applyChange,
+	      enumerable: true
+	    },
+	    revertChange: {
+	      value: revertChange,
+	      enumerable: true
+	    },
+	    isConflict: {
+	      value: function() {
+	        return 'undefined' !== typeof conflict;
+	      },
+	      enumerable: true
+	    },
+	    noConflict: {
+	      value: function() {
+	        if (conflictResolution) {
+	          conflictResolution.forEach(function(it) {
+	            it();
+	          });
+	          conflictResolution = null;
+	        }
+	        return accumulateDiff;
+	      },
+	      enumerable: true
+	    }
+	  });
+
+	  return accumulateDiff;
+	}));
+
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
+
+/***/ },
+/* 347 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.default = {
+	  level: "log",
+	  logger: console,
+	  logErrors: true,
+	  collapsed: undefined,
+	  predicate: undefined,
+	  duration: false,
+	  timestamp: true,
+	  stateTransformer: function stateTransformer(state) {
+	    return state;
+	  },
+	  actionTransformer: function actionTransformer(action) {
+	    return action;
+	  },
+	  errorTransformer: function errorTransformer(error) {
+	    return error;
+	  },
+	  colors: {
+	    title: function title() {
+	      return "inherit";
+	    },
+	    prevState: function prevState() {
+	      return "#9E9E9E";
+	    },
+	    action: function action() {
+	      return "#03A9F4";
+	    },
+	    nextState: function nextState() {
+	      return "#4CAF50";
+	    },
+	    error: function error() {
+	      return "#F20404";
+	    }
+	  },
+	  diff: false,
+	  diffPredicate: undefined,
+
+	  // Deprecated options
+	  transformer: undefined
+	};
+	module.exports = exports['default'];
+
+/***/ },
+/* 348 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	exports.__esModule = true;
+	function createThunkMiddleware(extraArgument) {
+	  return function (_ref) {
+	    var dispatch = _ref.dispatch;
+	    var getState = _ref.getState;
+	    return function (next) {
+	      return function (action) {
+	        if (typeof action === 'function') {
+	          return action(dispatch, getState, extraArgument);
+	        }
+
+	        return next(action);
+	      };
+	    };
+	  };
+	}
+
+	var thunk = createThunkMiddleware();
+	thunk.withExtraArgument = createThunkMiddleware;
+
+	exports['default'] = thunk;
+
+/***/ },
+/* 349 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+	exports.default = promiseMiddleware;
+
+	var _isPromise = __webpack_require__(350);
+
+	var _isPromise2 = _interopRequireDefault(_isPromise);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var defaultTypes = ['PENDING', 'FULFILLED', 'REJECTED'];
+
+	/**
+	 * @function promiseMiddleware
+	 * @description
+	 * @returns {function} thunk
+	 */
+	function promiseMiddleware() {
+	  var config = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+	  var promiseTypeSuffixes = config.promiseTypeSuffixes || defaultTypes;
+
+	  return function (ref) {
+	    var dispatch = ref.dispatch;
+
+
+	    return function (next) {
+	      return function (action) {
+	        if (action.payload) {
+	          if (!(0, _isPromise2.default)(action.payload) && !(0, _isPromise2.default)(action.payload.promise)) {
+	            return next(action);
+	          }
+	        } else {
+	          return next(action);
+	        }
+
+	        // Deconstruct the properties of the original action object to constants
+	        var type = action.type,
+	            payload = action.payload,
+	            meta = action.meta;
+
+	        // Assign values for promise type suffixes
+
+	        var _promiseTypeSuffixes = _slicedToArray(promiseTypeSuffixes, 3),
+	            PENDING = _promiseTypeSuffixes[0],
+	            FULFILLED = _promiseTypeSuffixes[1],
+	            REJECTED = _promiseTypeSuffixes[2];
+
+	        /**
+	         * @function getAction
+	         * @description Utility function for creating a rejected or fulfilled
+	         * flux standard action object.
+	         * @param {boolean} Is the action rejected?
+	         * @returns {object} action
+	         */
+
+
+	        var getAction = function getAction(newPayload, isRejected) {
+	          return _extends({
+	            type: type + '_' + (isRejected ? REJECTED : FULFILLED)
+	          }, newPayload === null || typeof newPayload === 'undefined' ? {} : {
+	            payload: newPayload
+	          }, meta !== undefined ? { meta: meta } : {}, isRejected ? {
+	            error: true
+	          } : {});
+	        };
+
+	        /**
+	         * Assign values for promise and data variables. In the case the payload
+	         * is an object with a `promise` and `data` property, the values of those
+	         * properties will be used. In the case the payload is a promise, the
+	         * value of the payload will be used and data will be null.
+	         */
+	        var promise = void 0;
+	        var data = void 0;
+
+	        if (!(0, _isPromise2.default)(action.payload) && _typeof(action.payload) === 'object') {
+	          promise = payload.promise;
+	          data = payload.data;
+	        } else {
+	          promise = payload;
+	          data = undefined;
+	        }
+
+	        /**
+	         * First, dispatch the pending action. This flux standard action object
+	         * describes the pending state of a promise and will include any data
+	         * (for optimistic updates) and/or meta from the original action.
+	         */
+	        next(_extends({
+	          type: type + '_' + PENDING
+	        }, data !== undefined ? { payload: data } : {}, meta !== undefined ? { meta: meta } : {}));
+
+	        /*
+	         * @function handleReject
+	         * @description Dispatch the rejected action and return
+	         * an error object. The error object is the original error
+	         * that was thrown. The user of the library is responsible for
+	         * best practices in ensure that they are throwing an Error object.
+	         * @params reason The reason the promise was rejected
+	         * @returns {object}
+	         */
+	        var handleReject = function handleReject(reason) {
+	          var rejectedAction = getAction(reason, true);
+	          dispatch(rejectedAction);
+	          throw reason;
+	        };
+
+	        /*
+	         * @function handleFulfill
+	         * @description Dispatch the fulfilled action and
+	         * return the success object. The success object should
+	         * contain the value and the dispatched action.
+	         * @param value The value the promise was resloved with
+	         * @returns {object}
+	         */
+	        var handleFulfill = function handleFulfill() {
+	          var value = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+
+	          var resolvedAction = getAction(value, false);
+	          dispatch(resolvedAction);
+
+	          return { value: value, action: resolvedAction };
+	        };
+
+	        /**
+	         * Second, dispatch a rejected or fulfilled action. This flux standard
+	         * action object will describe the resolved state of the promise. In
+	         * the case of a rejected promise, it will include an `error` property.
+	         *
+	         * In order to allow proper chaining of actions using `then`, a new
+	         * promise is constructed and returned. This promise will resolve
+	         * with two properties: (1) the value (if fulfilled) or reason
+	         * (if rejected) and (2) the flux standard action.
+	         *
+	         * Rejected object:
+	         * {
+	         *   reason: ...
+	         *   action: {
+	         *     error: true,
+	         *     type: 'ACTION_REJECTED',
+	         *     payload: ...
+	         *   }
+	         * }
+	         *
+	         * Fulfilled object:
+	         * {
+	         *   value: ...
+	         *   action: {
+	         *     type: 'ACTION_FULFILLED',
+	         *     payload: ...
+	         *   }
+	         * }
+	         */
+	        return promise.then(handleFulfill, handleReject);
+	      };
+	    };
+	  };
+	}
+
+/***/ },
+/* 350 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+	exports.default = isPromise;
+	function isPromise(value) {
+	  if (value !== null && (typeof value === 'undefined' ? 'undefined' : _typeof(value)) === 'object') {
+	    return value && typeof value.then === 'function';
+	  }
+
+	  return false;
+	}
+
+/***/ },
+/* 351 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+	exports.messages = exports.socket = exports.chatInput = exports.chatServer = exports.muted = exports.users = exports.user = undefined;
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	var _reactAddonsUpdate = __webpack_require__(352);
+
+	var _reactAddonsUpdate2 = _interopRequireDefault(_reactAddonsUpdate);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+	var user = function user() {
+	    var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+	    var action = arguments[1];
+
+	    switch (action.type) {
+	        case 'SIGN_IN_USER':
+	            return _extends({}, state, action.payload);
+	    }
+	    return state;
+	},
+	    users = function users() {
+	    var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : { idleUsers: [], activeUsers: [] };
+	    var action = arguments[1];
+
+	    switch (action.type) {
+	        case 'CHAT_SERVER_CONNECTED':
+	            return action.payload;
+	        case 'UPDATE_USERS':
+	            return action.payload;
+	    }
+	    return state;
+	},
+	    muted = function muted() {
+	    var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+	    var action = arguments[1];
+
+	    switch (action.type) {
+	        case 'TOGGLE_MUTE':
+	            var userMuteState = state[action.payload];
+	            return _extends({}, state, _defineProperty({}, action.payload, !userMuteState));
+	    }
+	    return state;
+	},
+	    chatServer = function chatServer() {
+	    var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
+	    var action = arguments[1];
+
+	    switch (action.type) {
+	        case 'CONNECTING_CHAT_SERVER':
+	            return 'connecting';
+	        case 'CHAT_SERVER_CONNECTED':
+	            return 'connected';
+	        case 'ERROR_CONNECTING_CHAT_SERVER':
+	            return 'error';
+	    }
+	    return state;
+	},
+	    chatInput = function chatInput() {
+	    var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
+	    var action = arguments[1];
+
+	    switch (action.type) {
+	        case 'TYPING':
+	            return action.payload;
+	        case 'CLEAR_INPUT':
+	            return '';
+	    }
+	    return state;
+	},
+	    socket = function socket() {
+	    var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+	    var action = arguments[1];
+
+	    switch (action.type) {
+	        case 'REGISTER_SOCKET':
+	            return action.payload;
+	    }
+	    return state;
+	},
+	    messages = function messages() {
+	    var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+	    var action = arguments[1];
+
+	    switch (action.type) {
+	        case 'INCOMING_MESSAGE':
+	            return [].concat(_toConsumableArray(state), [action.payload]);
+	        case 'INCOMING_MESSAGES':
+	            return [].concat(_toConsumableArray(action.payload), _toConsumableArray(state));
+	    }
+	    return state;
+	};
+
+	exports.user = user;
+	exports.users = users;
+	exports.muted = muted;
+	exports.chatServer = chatServer;
+	exports.chatInput = chatInput;
+	exports.socket = socket;
+	exports.messages = messages;
+
+/***/ },
+/* 352 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = __webpack_require__(353);
+
+/***/ },
+/* 353 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(process) {/**
+	 * Copyright 2013-present, Facebook, Inc.
+	 * All rights reserved.
+	 *
+	 * This source code is licensed under the BSD-style license found in the
+	 * LICENSE file in the root directory of this source tree. An additional grant
+	 * of patent rights can be found in the PATENTS file in the same directory.
+	 *
+	 */
+
+	/* global hasOwnProperty:true */
+
+	'use strict';
+
+	var _prodInvariant = __webpack_require__(7),
+	    _assign = __webpack_require__(4);
+
+	var invariant = __webpack_require__(8);
+	var hasOwnProperty = {}.hasOwnProperty;
+
+	function shallowCopy(x) {
+	  if (Array.isArray(x)) {
+	    return x.concat();
+	  } else if (x && typeof x === 'object') {
+	    return _assign(new x.constructor(), x);
+	  } else {
+	    return x;
+	  }
+	}
+
+	var COMMAND_PUSH = '$push';
+	var COMMAND_UNSHIFT = '$unshift';
+	var COMMAND_SPLICE = '$splice';
+	var COMMAND_SET = '$set';
+	var COMMAND_MERGE = '$merge';
+	var COMMAND_APPLY = '$apply';
+
+	var ALL_COMMANDS_LIST = [COMMAND_PUSH, COMMAND_UNSHIFT, COMMAND_SPLICE, COMMAND_SET, COMMAND_MERGE, COMMAND_APPLY];
+
+	var ALL_COMMANDS_SET = {};
+
+	ALL_COMMANDS_LIST.forEach(function (command) {
+	  ALL_COMMANDS_SET[command] = true;
+	});
+
+	function invariantArrayCase(value, spec, command) {
+	  !Array.isArray(value) ? process.env.NODE_ENV !== 'production' ? invariant(false, 'update(): expected target of %s to be an array; got %s.', command, value) : _prodInvariant('1', command, value) : void 0;
+	  var specValue = spec[command];
+	  !Array.isArray(specValue) ? process.env.NODE_ENV !== 'production' ? invariant(false, 'update(): expected spec of %s to be an array; got %s. Did you forget to wrap your parameter in an array?', command, specValue) : _prodInvariant('2', command, specValue) : void 0;
+	}
+
+	/**
+	 * Returns a updated shallow copy of an object without mutating the original.
+	 * See https://facebook.github.io/react/docs/update.html for details.
+	 */
+	function update(value, spec) {
+	  !(typeof spec === 'object') ? process.env.NODE_ENV !== 'production' ? invariant(false, 'update(): You provided a key path to update() that did not contain one of %s. Did you forget to include {%s: ...}?', ALL_COMMANDS_LIST.join(', '), COMMAND_SET) : _prodInvariant('3', ALL_COMMANDS_LIST.join(', '), COMMAND_SET) : void 0;
+
+	  if (hasOwnProperty.call(spec, COMMAND_SET)) {
+	    !(Object.keys(spec).length === 1) ? process.env.NODE_ENV !== 'production' ? invariant(false, 'Cannot have more than one key in an object with %s', COMMAND_SET) : _prodInvariant('4', COMMAND_SET) : void 0;
+
+	    return spec[COMMAND_SET];
+	  }
+
+	  var nextValue = shallowCopy(value);
+
+	  if (hasOwnProperty.call(spec, COMMAND_MERGE)) {
+	    var mergeObj = spec[COMMAND_MERGE];
+	    !(mergeObj && typeof mergeObj === 'object') ? process.env.NODE_ENV !== 'production' ? invariant(false, 'update(): %s expects a spec of type \'object\'; got %s', COMMAND_MERGE, mergeObj) : _prodInvariant('5', COMMAND_MERGE, mergeObj) : void 0;
+	    !(nextValue && typeof nextValue === 'object') ? process.env.NODE_ENV !== 'production' ? invariant(false, 'update(): %s expects a target of type \'object\'; got %s', COMMAND_MERGE, nextValue) : _prodInvariant('6', COMMAND_MERGE, nextValue) : void 0;
+	    _assign(nextValue, spec[COMMAND_MERGE]);
+	  }
+
+	  if (hasOwnProperty.call(spec, COMMAND_PUSH)) {
+	    invariantArrayCase(value, spec, COMMAND_PUSH);
+	    spec[COMMAND_PUSH].forEach(function (item) {
+	      nextValue.push(item);
+	    });
+	  }
+
+	  if (hasOwnProperty.call(spec, COMMAND_UNSHIFT)) {
+	    invariantArrayCase(value, spec, COMMAND_UNSHIFT);
+	    spec[COMMAND_UNSHIFT].forEach(function (item) {
+	      nextValue.unshift(item);
+	    });
+	  }
+
+	  if (hasOwnProperty.call(spec, COMMAND_SPLICE)) {
+	    !Array.isArray(value) ? process.env.NODE_ENV !== 'production' ? invariant(false, 'Expected %s target to be an array; got %s', COMMAND_SPLICE, value) : _prodInvariant('7', COMMAND_SPLICE, value) : void 0;
+	    !Array.isArray(spec[COMMAND_SPLICE]) ? process.env.NODE_ENV !== 'production' ? invariant(false, 'update(): expected spec of %s to be an array of arrays; got %s. Did you forget to wrap your parameters in an array?', COMMAND_SPLICE, spec[COMMAND_SPLICE]) : _prodInvariant('8', COMMAND_SPLICE, spec[COMMAND_SPLICE]) : void 0;
+	    spec[COMMAND_SPLICE].forEach(function (args) {
+	      !Array.isArray(args) ? process.env.NODE_ENV !== 'production' ? invariant(false, 'update(): expected spec of %s to be an array of arrays; got %s. Did you forget to wrap your parameters in an array?', COMMAND_SPLICE, spec[COMMAND_SPLICE]) : _prodInvariant('8', COMMAND_SPLICE, spec[COMMAND_SPLICE]) : void 0;
+	      nextValue.splice.apply(nextValue, args);
+	    });
+	  }
+
+	  if (hasOwnProperty.call(spec, COMMAND_APPLY)) {
+	    !(typeof spec[COMMAND_APPLY] === 'function') ? process.env.NODE_ENV !== 'production' ? invariant(false, 'update(): expected spec of %s to be a function; got %s.', COMMAND_APPLY, spec[COMMAND_APPLY]) : _prodInvariant('9', COMMAND_APPLY, spec[COMMAND_APPLY]) : void 0;
+	    nextValue = spec[COMMAND_APPLY](nextValue);
+	  }
+
+	  for (var k in spec) {
+	    if (!(ALL_COMMANDS_SET.hasOwnProperty(k) && ALL_COMMANDS_SET[k])) {
+	      nextValue[k] = update(value[k], spec[k]);
+	    }
+	  }
+
+	  return nextValue;
+	}
+
+	module.exports = update;
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
+
+/***/ },
+/* 354 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+	exports.chatMessageScroll = exports.webSocket = undefined;
+
+	var _moment = __webpack_require__(224);
+
+	var _moment2 = _interopRequireDefault(_moment);
+
+	var _uniqid = __webpack_require__(355);
+
+	var _uniqid2 = _interopRequireDefault(_uniqid);
+
+	var _reactNotifyToast = __webpack_require__(339);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var webSocket = function webSocket(store) {
+	    return function (next) {
+	        return function (action) {
+	            var dispatch = store.dispatch,
+	                _store$getState = store.getState(),
+	                socket = _store$getState.socket,
+	                user = _store$getState.user;
+
+	            switch (action.type) {
+	                case 'SIGN_IN_USER':
+	                    dispatch({ type: 'CONNECTING_CHAT_SERVER' });
+	                    return socket.emit('signInUser', action.payload, function (response) {
+	                        if (response) {
+	                            setTimeout(function () {
+	                                // 1 second delay for demonstration, as connection within localhost is fast
+	                                dispatch({
+	                                    type: 'CHAT_SERVER_CONNECTED',
+	                                    payload: response
+	                                });
+	                                next(action);
+	                            }, 1000);
+	                        } else {
+	                            dispatch({ type: 'ERROR_CONNECTING_CHAT_SERVER' });
+	                        }
+	                    });
+	                case 'SUBMIT_MESSAGE':
+	                    return socket.emit('message', {
+	                        user: user,
+	                        content: action.payload,
+	                        sent: (0, _moment2.default)(),
+	                        id: (0, _uniqid2.default)()
+	                    });
+	            }
+	            return next(action);
+	        };
+	    };
+	},
+	    chatMessageScroll = function chatMessageScroll(store) {
+	    return function (next) {
+	        return function (action) {
+	            var _store$getState2 = store.getState(),
+	                muted = _store$getState2.muted;
+
+	            switch (action.type) {
+	                case 'INCOMING_MESSAGE':
+	                    if (muted[action.payload.user.id]) {
+	                        return;
+	                    }
+	                    if (Math.abs($('.chat-messages')[0].scrollHeight - $('.chat-messages').scrollTop() - $('.chat-messages').outerHeight()) < 2) {
+	                        $('.chat-messages').animate({
+	                            scrollTop: $('.chat-messages')[0].scrollHeight
+	                        }, 400, 'linear');
+	                    } else {
+	                        _reactNotifyToast.notify.show('You have unread messages');
+	                    }
+	            }
+	            return next(action);
+	        };
+	    };
+	};
+
+	exports.webSocket = webSocket;
+	exports.chatMessageScroll = chatMessageScroll;
+
+/***/ },
+/* 355 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(process, module) {/* 
+	(The MIT License)
+	Copyright (c) 2014 Halász Ádám <mail@adamhalasz.com>
+	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+	The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+	*/
+
+	//  Unique Hexatridecimal ID Generator
+	// ================================================
+
+	//  Dependencies
+	// ================================================
+	var pid = process && process.pid ? process.pid.toString(36) : '' ;
+	var mac =  false ? require('macaddress').one(macHandler) : null ;
+	var address = mac ? parseInt(mac.replace(/\:|\D+/gi, '')).toString(36) : '' ;
+
+	//  Exports
+	// ================================================
+	module.exports         = function(prefix){ return (prefix || '') + address + pid + now().toString(36); }
+	module.exports.process = function(prefix){ return (prefix || '')           + pid + now().toString(36); }
+	module.exports.time    = function(prefix){ return (prefix || '')                 + now().toString(36); }
+
+	//  Helpers
+	// ================================================
+	function now(){
+	    var time = new Date().getTime();
+	    var last = now.last || time;
+	    return now.last = time > last ? time : last + 1;
+	}
+
+	function macHandler(error){
+	    if(module.parent.uniqid_debug){
+	        if(error) console.error('Info: No mac address - uniqid() falls back to uniqid.process().', error)
+	        if(pid == '') console.error('Info: No process.pid - uniqid.process() falls back to uniqid.time().')
+	    }
+	}
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3), __webpack_require__(203)(module)))
+
+/***/ },
+/* 356 */
+/***/ function(module, exports, __webpack_require__) {
+
 	
 	/**
 	 * Module dependencies.
 	 */
 
-	var url = __webpack_require__(340);
-	var parser = __webpack_require__(345);
-	var Manager = __webpack_require__(355);
-	var debug = __webpack_require__(342)('socket.io-client');
+	var url = __webpack_require__(357);
+	var parser = __webpack_require__(362);
+	var Manager = __webpack_require__(372);
+	var debug = __webpack_require__(359)('socket.io-client');
 
 	/**
 	 * Module exports.
@@ -56940,12 +58790,12 @@
 	 * @api public
 	 */
 
-	exports.Manager = __webpack_require__(355);
-	exports.Socket = __webpack_require__(385);
+	exports.Manager = __webpack_require__(372);
+	exports.Socket = __webpack_require__(402);
 
 
 /***/ },
-/* 340 */
+/* 357 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {
@@ -56953,8 +58803,8 @@
 	 * Module dependencies.
 	 */
 
-	var parseuri = __webpack_require__(341);
-	var debug = __webpack_require__(342)('socket.io-client:url');
+	var parseuri = __webpack_require__(358);
+	var debug = __webpack_require__(359)('socket.io-client:url');
 
 	/**
 	 * Module exports.
@@ -57027,7 +58877,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 341 */
+/* 358 */
 /***/ function(module, exports) {
 
 	/**
@@ -57072,7 +58922,7 @@
 
 
 /***/ },
-/* 342 */
+/* 359 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {
@@ -57082,7 +58932,7 @@
 	 * Expose `debug()` as the module.
 	 */
 
-	exports = module.exports = __webpack_require__(343);
+	exports = module.exports = __webpack_require__(360);
 	exports.log = log;
 	exports.formatArgs = formatArgs;
 	exports.save = save;
@@ -57256,7 +59106,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ },
-/* 343 */
+/* 360 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -57272,7 +59122,7 @@
 	exports.disable = disable;
 	exports.enable = enable;
 	exports.enabled = enabled;
-	exports.humanize = __webpack_require__(344);
+	exports.humanize = __webpack_require__(361);
 
 	/**
 	 * The currently active debug mode names, and names to skip.
@@ -57462,7 +59312,7 @@
 
 
 /***/ },
-/* 344 */
+/* 361 */
 /***/ function(module, exports) {
 
 	/**
@@ -57617,7 +59467,7 @@
 
 
 /***/ },
-/* 345 */
+/* 362 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -57625,11 +59475,11 @@
 	 * Module dependencies.
 	 */
 
-	var debug = __webpack_require__(346)('socket.io-parser');
-	var json = __webpack_require__(349);
-	var Emitter = __webpack_require__(351);
-	var binary = __webpack_require__(352);
-	var isBuf = __webpack_require__(354);
+	var debug = __webpack_require__(363)('socket.io-parser');
+	var json = __webpack_require__(366);
+	var Emitter = __webpack_require__(368);
+	var binary = __webpack_require__(369);
+	var isBuf = __webpack_require__(371);
 
 	/**
 	 * Protocol version.
@@ -58027,7 +59877,7 @@
 
 
 /***/ },
-/* 346 */
+/* 363 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -58037,7 +59887,7 @@
 	 * Expose `debug()` as the module.
 	 */
 
-	exports = module.exports = __webpack_require__(347);
+	exports = module.exports = __webpack_require__(364);
 	exports.log = log;
 	exports.formatArgs = formatArgs;
 	exports.save = save;
@@ -58201,7 +60051,7 @@
 
 
 /***/ },
-/* 347 */
+/* 364 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -58217,7 +60067,7 @@
 	exports.disable = disable;
 	exports.enable = enable;
 	exports.enabled = enabled;
-	exports.humanize = __webpack_require__(348);
+	exports.humanize = __webpack_require__(365);
 
 	/**
 	 * The currently active debug mode names, and names to skip.
@@ -58404,7 +60254,7 @@
 
 
 /***/ },
-/* 348 */
+/* 365 */
 /***/ function(module, exports) {
 
 	/**
@@ -58535,14 +60385,14 @@
 
 
 /***/ },
-/* 349 */
+/* 366 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {/*! JSON v3.3.2 | http://bestiejs.github.io/json3 | Copyright 2012-2014, Kit Cambridge | http://kit.mit-license.org */
 	;(function () {
 	  // Detect the `define` function exposed by asynchronous module loaders. The
 	  // strict `define` check is necessary for compatibility with `r.js`.
-	  var isLoader = "function" === "function" && __webpack_require__(350);
+	  var isLoader = "function" === "function" && __webpack_require__(367);
 
 	  // A set of types used to distinguish objects from primitives.
 	  var objectTypes = {
@@ -59444,7 +61294,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(203)(module), (function() { return this; }())))
 
 /***/ },
-/* 350 */
+/* 367 */
 /***/ function(module, exports) {
 
 	/* WEBPACK VAR INJECTION */(function(__webpack_amd_options__) {module.exports = __webpack_amd_options__;
@@ -59452,7 +61302,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, {}))
 
 /***/ },
-/* 351 */
+/* 368 */
 /***/ function(module, exports) {
 
 	
@@ -59622,7 +61472,7 @@
 
 
 /***/ },
-/* 352 */
+/* 369 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/*global Blob,File*/
@@ -59631,8 +61481,8 @@
 	 * Module requirements
 	 */
 
-	var isArray = __webpack_require__(353);
-	var isBuf = __webpack_require__(354);
+	var isArray = __webpack_require__(370);
+	var isBuf = __webpack_require__(371);
 
 	/**
 	 * Replaces every Buffer | ArrayBuffer in packet with a numbered placeholder.
@@ -59770,7 +61620,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 353 */
+/* 370 */
 /***/ function(module, exports) {
 
 	module.exports = Array.isArray || function (arr) {
@@ -59779,7 +61629,7 @@
 
 
 /***/ },
-/* 354 */
+/* 371 */
 /***/ function(module, exports) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {
@@ -59799,7 +61649,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 355 */
+/* 372 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -59807,15 +61657,15 @@
 	 * Module dependencies.
 	 */
 
-	var eio = __webpack_require__(356);
-	var Socket = __webpack_require__(385);
-	var Emitter = __webpack_require__(374);
-	var parser = __webpack_require__(345);
-	var on = __webpack_require__(387);
-	var bind = __webpack_require__(388);
-	var debug = __webpack_require__(342)('socket.io-client:manager');
-	var indexOf = __webpack_require__(383);
-	var Backoff = __webpack_require__(389);
+	var eio = __webpack_require__(373);
+	var Socket = __webpack_require__(402);
+	var Emitter = __webpack_require__(391);
+	var parser = __webpack_require__(362);
+	var on = __webpack_require__(404);
+	var bind = __webpack_require__(405);
+	var debug = __webpack_require__(359)('socket.io-client:manager');
+	var indexOf = __webpack_require__(400);
+	var Backoff = __webpack_require__(406);
 
 	/**
 	 * IE6+ hasOwnProperty
@@ -60365,19 +62215,19 @@
 
 
 /***/ },
-/* 356 */
+/* 373 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
-	module.exports = __webpack_require__(357);
+	module.exports = __webpack_require__(374);
 
 
 /***/ },
-/* 357 */
+/* 374 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
-	module.exports = __webpack_require__(358);
+	module.exports = __webpack_require__(375);
 
 	/**
 	 * Exports parser
@@ -60385,25 +62235,25 @@
 	 * @api public
 	 *
 	 */
-	module.exports.parser = __webpack_require__(365);
+	module.exports.parser = __webpack_require__(382);
 
 
 /***/ },
-/* 358 */
+/* 375 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/**
 	 * Module dependencies.
 	 */
 
-	var transports = __webpack_require__(359);
-	var Emitter = __webpack_require__(374);
-	var debug = __webpack_require__(378)('engine.io-client:socket');
-	var index = __webpack_require__(383);
-	var parser = __webpack_require__(365);
-	var parseuri = __webpack_require__(341);
-	var parsejson = __webpack_require__(384);
-	var parseqs = __webpack_require__(375);
+	var transports = __webpack_require__(376);
+	var Emitter = __webpack_require__(391);
+	var debug = __webpack_require__(395)('engine.io-client:socket');
+	var index = __webpack_require__(400);
+	var parser = __webpack_require__(382);
+	var parseuri = __webpack_require__(358);
+	var parsejson = __webpack_require__(401);
+	var parseqs = __webpack_require__(392);
 
 	/**
 	 * Module exports.
@@ -60535,9 +62385,9 @@
 	 */
 
 	Socket.Socket = Socket;
-	Socket.Transport = __webpack_require__(364);
-	Socket.transports = __webpack_require__(359);
-	Socket.parser = __webpack_require__(365);
+	Socket.Transport = __webpack_require__(381);
+	Socket.transports = __webpack_require__(376);
+	Socket.parser = __webpack_require__(382);
 
 	/**
 	 * Creates transport of the given type.
@@ -61134,17 +62984,17 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 359 */
+/* 376 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/**
 	 * Module dependencies
 	 */
 
-	var XMLHttpRequest = __webpack_require__(360);
-	var XHR = __webpack_require__(362);
-	var JSONP = __webpack_require__(380);
-	var websocket = __webpack_require__(381);
+	var XMLHttpRequest = __webpack_require__(377);
+	var XHR = __webpack_require__(379);
+	var JSONP = __webpack_require__(397);
+	var websocket = __webpack_require__(398);
 
 	/**
 	 * Export transports.
@@ -61194,12 +63044,12 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 360 */
+/* 377 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {// browser shim for xmlhttprequest module
 
-	var hasCORS = __webpack_require__(361);
+	var hasCORS = __webpack_require__(378);
 
 	module.exports = function (opts) {
 	  var xdomain = opts.xdomain;
@@ -61238,7 +63088,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 361 */
+/* 378 */
 /***/ function(module, exports) {
 
 	
@@ -61261,18 +63111,18 @@
 
 
 /***/ },
-/* 362 */
+/* 379 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/**
 	 * Module requirements.
 	 */
 
-	var XMLHttpRequest = __webpack_require__(360);
-	var Polling = __webpack_require__(363);
-	var Emitter = __webpack_require__(374);
-	var inherit = __webpack_require__(376);
-	var debug = __webpack_require__(378)('engine.io-client:polling-xhr');
+	var XMLHttpRequest = __webpack_require__(377);
+	var Polling = __webpack_require__(380);
+	var Emitter = __webpack_require__(391);
+	var inherit = __webpack_require__(393);
+	var debug = __webpack_require__(395)('engine.io-client:polling-xhr');
 
 	/**
 	 * Module exports.
@@ -61692,19 +63542,19 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 363 */
+/* 380 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
 	 * Module dependencies.
 	 */
 
-	var Transport = __webpack_require__(364);
-	var parseqs = __webpack_require__(375);
-	var parser = __webpack_require__(365);
-	var inherit = __webpack_require__(376);
-	var yeast = __webpack_require__(377);
-	var debug = __webpack_require__(378)('engine.io-client:polling');
+	var Transport = __webpack_require__(381);
+	var parseqs = __webpack_require__(392);
+	var parser = __webpack_require__(382);
+	var inherit = __webpack_require__(393);
+	var yeast = __webpack_require__(394);
+	var debug = __webpack_require__(395)('engine.io-client:polling');
 
 	/**
 	 * Module exports.
@@ -61717,7 +63567,7 @@
 	 */
 
 	var hasXHR2 = (function () {
-	  var XMLHttpRequest = __webpack_require__(360);
+	  var XMLHttpRequest = __webpack_require__(377);
 	  var xhr = new XMLHttpRequest({ xdomain: false });
 	  return null != xhr.responseType;
 	})();
@@ -61943,15 +63793,15 @@
 
 
 /***/ },
-/* 364 */
+/* 381 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
 	 * Module dependencies.
 	 */
 
-	var parser = __webpack_require__(365);
-	var Emitter = __webpack_require__(374);
+	var parser = __webpack_require__(382);
+	var Emitter = __webpack_require__(391);
 
 	/**
 	 * Module exports.
@@ -62106,22 +63956,22 @@
 
 
 /***/ },
-/* 365 */
+/* 382 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/**
 	 * Module dependencies.
 	 */
 
-	var keys = __webpack_require__(366);
-	var hasBinary = __webpack_require__(367);
-	var sliceBuffer = __webpack_require__(369);
-	var after = __webpack_require__(370);
-	var utf8 = __webpack_require__(371);
+	var keys = __webpack_require__(383);
+	var hasBinary = __webpack_require__(384);
+	var sliceBuffer = __webpack_require__(386);
+	var after = __webpack_require__(387);
+	var utf8 = __webpack_require__(388);
 
 	var base64encoder;
 	if (global && global.ArrayBuffer) {
-	  base64encoder = __webpack_require__(372);
+	  base64encoder = __webpack_require__(389);
 	}
 
 	/**
@@ -62179,7 +64029,7 @@
 	 * Create a blob api even for blob builder when vendor prefixes exist
 	 */
 
-	var Blob = __webpack_require__(373);
+	var Blob = __webpack_require__(390);
 
 	/**
 	 * Encodes a packet.
@@ -62722,7 +64572,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 366 */
+/* 383 */
 /***/ function(module, exports) {
 
 	
@@ -62747,7 +64597,7 @@
 
 
 /***/ },
-/* 367 */
+/* 384 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {
@@ -62755,7 +64605,7 @@
 	 * Module requirements.
 	 */
 
-	var isArray = __webpack_require__(368);
+	var isArray = __webpack_require__(385);
 
 	/**
 	 * Module exports.
@@ -62813,7 +64663,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 368 */
+/* 385 */
 /***/ function(module, exports) {
 
 	module.exports = Array.isArray || function (arr) {
@@ -62822,7 +64672,7 @@
 
 
 /***/ },
-/* 369 */
+/* 386 */
 /***/ function(module, exports) {
 
 	/**
@@ -62857,7 +64707,7 @@
 
 
 /***/ },
-/* 370 */
+/* 387 */
 /***/ function(module, exports) {
 
 	module.exports = after
@@ -62891,7 +64741,7 @@
 
 
 /***/ },
-/* 371 */
+/* 388 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {/*! https://mths.be/wtf8 v1.0.0 by @mathias */
@@ -63130,7 +64980,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(203)(module), (function() { return this; }())))
 
 /***/ },
-/* 372 */
+/* 389 */
 /***/ function(module, exports) {
 
 	/*
@@ -63203,7 +65053,7 @@
 
 
 /***/ },
-/* 373 */
+/* 390 */
 /***/ function(module, exports) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/**
@@ -63306,7 +65156,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 374 */
+/* 391 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -63475,7 +65325,7 @@
 
 
 /***/ },
-/* 375 */
+/* 392 */
 /***/ function(module, exports) {
 
 	/**
@@ -63518,7 +65368,7 @@
 
 
 /***/ },
-/* 376 */
+/* 393 */
 /***/ function(module, exports) {
 
 	
@@ -63530,7 +65380,7 @@
 	};
 
 /***/ },
-/* 377 */
+/* 394 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -63604,7 +65454,7 @@
 
 
 /***/ },
-/* 378 */
+/* 395 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {
@@ -63614,7 +65464,7 @@
 	 * Expose `debug()` as the module.
 	 */
 
-	exports = module.exports = __webpack_require__(379);
+	exports = module.exports = __webpack_require__(396);
 	exports.log = log;
 	exports.formatArgs = formatArgs;
 	exports.save = save;
@@ -63788,7 +65638,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ },
-/* 379 */
+/* 396 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -63804,7 +65654,7 @@
 	exports.disable = disable;
 	exports.enable = enable;
 	exports.enabled = enabled;
-	exports.humanize = __webpack_require__(344);
+	exports.humanize = __webpack_require__(361);
 
 	/**
 	 * The currently active debug mode names, and names to skip.
@@ -63994,7 +65844,7 @@
 
 
 /***/ },
-/* 380 */
+/* 397 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {
@@ -64002,8 +65852,8 @@
 	 * Module requirements.
 	 */
 
-	var Polling = __webpack_require__(363);
-	var inherit = __webpack_require__(376);
+	var Polling = __webpack_require__(380);
+	var inherit = __webpack_require__(393);
 
 	/**
 	 * Module exports.
@@ -64232,24 +66082,24 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 381 */
+/* 398 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/**
 	 * Module dependencies.
 	 */
 
-	var Transport = __webpack_require__(364);
-	var parser = __webpack_require__(365);
-	var parseqs = __webpack_require__(375);
-	var inherit = __webpack_require__(376);
-	var yeast = __webpack_require__(377);
-	var debug = __webpack_require__(378)('engine.io-client:websocket');
+	var Transport = __webpack_require__(381);
+	var parser = __webpack_require__(382);
+	var parseqs = __webpack_require__(392);
+	var inherit = __webpack_require__(393);
+	var yeast = __webpack_require__(394);
+	var debug = __webpack_require__(395)('engine.io-client:websocket');
 	var BrowserWebSocket = global.WebSocket || global.MozWebSocket;
 	var NodeWebSocket;
 	if (typeof window === 'undefined') {
 	  try {
-	    NodeWebSocket = __webpack_require__(382);
+	    NodeWebSocket = __webpack_require__(399);
 	  } catch (e) { }
 	}
 
@@ -64524,13 +66374,13 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 382 */
+/* 399 */
 /***/ function(module, exports) {
 
 	/* (ignored) */
 
 /***/ },
-/* 383 */
+/* 400 */
 /***/ function(module, exports) {
 
 	
@@ -64545,7 +66395,7 @@
 	};
 
 /***/ },
-/* 384 */
+/* 401 */
 /***/ function(module, exports) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/**
@@ -64583,7 +66433,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 385 */
+/* 402 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -64591,13 +66441,13 @@
 	 * Module dependencies.
 	 */
 
-	var parser = __webpack_require__(345);
-	var Emitter = __webpack_require__(374);
-	var toArray = __webpack_require__(386);
-	var on = __webpack_require__(387);
-	var bind = __webpack_require__(388);
-	var debug = __webpack_require__(342)('socket.io-client:socket');
-	var hasBin = __webpack_require__(367);
+	var parser = __webpack_require__(362);
+	var Emitter = __webpack_require__(391);
+	var toArray = __webpack_require__(403);
+	var on = __webpack_require__(404);
+	var bind = __webpack_require__(405);
+	var debug = __webpack_require__(359)('socket.io-client:socket');
+	var hasBin = __webpack_require__(384);
 
 	/**
 	 * Module exports.
@@ -65008,7 +66858,7 @@
 
 
 /***/ },
-/* 386 */
+/* 403 */
 /***/ function(module, exports) {
 
 	module.exports = toArray
@@ -65027,7 +66877,7 @@
 
 
 /***/ },
-/* 387 */
+/* 404 */
 /***/ function(module, exports) {
 
 	
@@ -65057,7 +66907,7 @@
 
 
 /***/ },
-/* 388 */
+/* 405 */
 /***/ function(module, exports) {
 
 	/**
@@ -65086,7 +66936,7 @@
 
 
 /***/ },
-/* 389 */
+/* 406 */
 /***/ function(module, exports) {
 
 	
@@ -65175,1836 +67025,6 @@
 	};
 
 
-
-/***/ },
-/* 390 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-		value: true
-	});
-	exports.notify = undefined;
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _react = __webpack_require__(1);
-
-	var _react2 = _interopRequireDefault(_react);
-
-	var _reactDom = __webpack_require__(32);
-
-	var _reactDom2 = _interopRequireDefault(_reactDom);
-
-	var _objectAssign = __webpack_require__(391);
-
-	var _objectAssign2 = _interopRequireDefault(_objectAssign);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-	var notificationWrapperId = 'notification-wrapper';
-	var defaultTimeout = 5000; // ms
-	var animationDuration = 300; // ms
-
-	/* Colors */
-	var colorWhite = 'white';
-	var colorError = '#E85742';
-	var colorSuccess = '#55CA92';
-	var colorWarning = '#F5E273';
-	var textColorWarning = '#333333';
-
-	/* React Notification Component */
-
-	var Toast = function (_React$Component) {
-		_inherits(Toast, _React$Component);
-
-		function Toast() {
-			var _ref;
-
-			var _temp, _this, _ret;
-
-			_classCallCheck(this, Toast);
-
-			for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-				args[_key] = arguments[_key];
-			}
-
-			return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref = Toast.__proto__ || Object.getPrototypeOf(Toast)).call.apply(_ref, [this].concat(args))), _this), _this.state = {
-				styleParent: null
-			}, _temp), _possibleConstructorReturn(_this, _ret);
-		}
-
-		_createClass(Toast, [{
-			key: 'getStyles',
-			value: function getStyles() {
-				var styles = {};
-
-				var containerStyle = {
-					position: 'fixed',
-					width: '50%',
-					margin: '0 auto',
-					right: '0px',
-					top: '-100px',
-					left: '0px',
-					textAlign: 'center',
-					zIndex: '999',
-					pointerEvents: 'none',
-					transition: 'all ' + animationDuration + 'ms ease',
-					transform: 'translateY(0px)',
-					// Vendor Prefixes
-					msTransition: 'all ' + animationDuration + 'ms ease',
-					msTransform: 'translateY(0px)',
-					WebkitTransition: 'all ' + animationDuration + 'ms ease',
-					WebkitTransform: 'translateY(0px)',
-					OTransition: 'all ' + animationDuration + 'ms ease',
-					OTransform: 'translateY(0px)',
-					MozTransition: 'all ' + animationDuration + 'ms ease',
-					MozTransform: 'translateY(0px)'
-				};
-
-				var contentStyle = {
-					cursor: 'pointer',
-					display: 'inline',
-					width: 'auto',
-					borderRadius: '0 0 4px 4px',
-					backgroundColor: 'white',
-					padding: '10px 30px',
-					pointerEvents: 'all'
-				};
-
-				/* If type is set, merge toast action styles with base */
-				switch (this.props.type) {
-					case 'success':
-						var successStyle = {
-							backgroundColor: colorSuccess,
-							color: colorWhite
-						};
-						styles.content = (0, _objectAssign2.default)({}, contentStyle, successStyle);
-						break;
-
-					case 'error':
-						var errorStyle = {
-							backgroundColor: colorError,
-							color: colorWhite
-						};
-						styles.content = (0, _objectAssign2.default)({}, contentStyle, errorStyle);
-						break;
-
-					case 'warning':
-						var warningStyle = {
-							backgroundColor: colorWarning,
-							color: textColorWarning
-						};
-						styles.content = (0, _objectAssign2.default)({}, contentStyle, warningStyle);
-						break;
-
-					case 'custom':
-						var customStyle = {
-							backgroundColor: this.props.color.background,
-							color: this.props.color.text
-						};
-						styles.content = (0, _objectAssign2.default)({}, contentStyle, customStyle);
-						break;
-
-					default:
-						styles.content = (0, _objectAssign2.default)({}, contentStyle);
-						break;
-				}
-
-				styles.container = containerStyle;
-
-				return styles;
-			}
-		}, {
-			key: 'getVisibleState',
-			value: function getVisibleState(context) {
-				var base = this.getStyles().container;
-
-				// Show
-				var stylesShow = {
-					transform: 'translateY(108px)',
-					msTransform: 'translateY(108px)',
-					WebkitTransform: 'translateY(108px)',
-					OTransform: 'translateY(108px)',
-					MozTransform: 'translateY(108px)'
-				};
-
-				setTimeout(function () {
-					context.updateStyle(base, stylesShow);
-				}, 100); // wait 100ms after the component is called to animate toast.
-
-				if (this.props.timeout === -1) {
-					return;
-				}
-
-				// Hide after timeout
-				var stylesHide = {
-					transform: 'translateY(-108px)',
-					msTransform: 'translateY(-108px)',
-					WebkitTransform: 'translateY(-108px)',
-					OTransform: 'translateY(-108px)',
-					MozTransform: 'translateY(-108px)'
-				};
-
-				setTimeout(function () {
-					context.updateStyle(base, stylesHide);
-				}, this.props.timeout);
-			}
-		}, {
-			key: 'updateStyle',
-			value: function updateStyle(base, update) {
-				this.setState({ styleParent: (0, _objectAssign2.default)({}, base, update) });
-			}
-		}, {
-			key: 'getBaseStyle',
-			value: function getBaseStyle() {
-				this.setState({ styleParent: this.getStyles().container });
-			}
-		}, {
-			key: 'componentDidMount',
-			value: function componentDidMount() {
-				this.getBaseStyle();
-				this.getVisibleState(this);
-			}
-		}, {
-			key: 'render',
-			value: function render() {
-				var _props = this.props,
-				    text = _props.text,
-				    type = _props.type;
-
-				var styles = this.getStyles();
-				var styleParent = this.state.styleParent;
-
-				return _react2.default.createElement(
-					'div',
-					{ className: 'toast-notification', style: styleParent },
-					_react2.default.createElement(
-						'span',
-						{ className: type, style: styles.content },
-						text
-					)
-				);
-			}
-		}]);
-
-		return Toast;
-	}(_react2.default.Component);
-
-	/* Private Functions */
-
-	/* Render React component */
-
-
-	Toast.propTypes = {
-		text: _react.PropTypes.string,
-		timeout: _react.PropTypes.number,
-		type: _react.PropTypes.string,
-		color: _react.PropTypes.object,
-		style: _react.PropTypes.oneOfType([_react.PropTypes.object, _react.PropTypes.bool])
-	};
-	function renderToast(text, type, timeout, color) {
-		_reactDom2.default.render(_react2.default.createElement(Toast, { text: text, timeout: timeout, type: type, color: color }), document.getElementById(notificationWrapperId));
-	}
-
-	/* Unmount React component */
-	function hideToast() {
-		_reactDom2.default.unmountComponentAtNode(document.getElementById(notificationWrapperId));
-	}
-
-	/* Public functions */
-
-	/* Show Animated Toast Message */
-	function show(text, type, timeout, color) {
-		if (!document.getElementById(notificationWrapperId).hasChildNodes()) {
-			var renderTimeout = timeout;
-
-			// Use default timeout if not set.
-			if (!renderTimeout) {
-				renderTimeout = defaultTimeout;
-			}
-
-			// Render Component with Props.
-			renderToast(text, type, renderTimeout, color);
-
-			if (timeout === -1) {
-				return;
-			}
-
-			// Unmount react component after the animation finished.
-			setTimeout(function () {
-				hideToast();
-			}, renderTimeout + animationDuration);
-		}
-	}
-
-	/* Export notification container */
-
-	var _class = function (_React$Component2) {
-		_inherits(_class, _React$Component2);
-
-		function _class() {
-			_classCallCheck(this, _class);
-
-			return _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).apply(this, arguments));
-		}
-
-		_createClass(_class, [{
-			key: 'render',
-			value: function render() {
-				return _react2.default.createElement('div', { id: notificationWrapperId });
-			}
-		}]);
-
-		return _class;
-	}(_react2.default.Component);
-
-	/* Export notification functions */
-
-
-	exports.default = _class;
-	var notify = exports.notify = {
-		show: show
-	};
-
-/***/ },
-/* 391 */
-/***/ function(module, exports) {
-
-	'use strict';
-	var propIsEnumerable = Object.prototype.propertyIsEnumerable;
-
-	function ToObject(val) {
-		if (val == null) {
-			throw new TypeError('Object.assign cannot be called with null or undefined');
-		}
-
-		return Object(val);
-	}
-
-	function ownEnumerableKeys(obj) {
-		var keys = Object.getOwnPropertyNames(obj);
-
-		if (Object.getOwnPropertySymbols) {
-			keys = keys.concat(Object.getOwnPropertySymbols(obj));
-		}
-
-		return keys.filter(function (key) {
-			return propIsEnumerable.call(obj, key);
-		});
-	}
-
-	module.exports = Object.assign || function (target, source) {
-		var from;
-		var keys;
-		var to = ToObject(target);
-
-		for (var s = 1; s < arguments.length; s++) {
-			from = arguments[s];
-			keys = ownEnumerableKeys(Object(from));
-
-			for (var i = 0; i < keys.length; i++) {
-				to[keys[i]] = from[keys[i]];
-			}
-		}
-
-		return to;
-	};
-
-
-/***/ },
-/* 392 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	    value: true
-	});
-
-	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-	var _redux = __webpack_require__(189);
-
-	var _reduxLogger = __webpack_require__(393);
-
-	var _reduxLogger2 = _interopRequireDefault(_reduxLogger);
-
-	var _reduxThunk = __webpack_require__(399);
-
-	var _reduxThunk2 = _interopRequireDefault(_reduxThunk);
-
-	var _reduxPromiseMiddleware = __webpack_require__(400);
-
-	var _reduxPromiseMiddleware2 = _interopRequireDefault(_reduxPromiseMiddleware);
-
-	var _reducer = __webpack_require__(402);
-
-	var reducers = _interopRequireWildcard(_reducer);
-
-	var _middleware = __webpack_require__(405);
-
-	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	var reducer = (0, _redux.combineReducers)(_extends({}, reducers)),
-	    middleware = (0, _redux.applyMiddleware)((0, _reduxLogger2.default)(), _middleware.webSocket, _middleware.chatMessageScroll, _reduxThunk2.default, (0, _reduxPromiseMiddleware2.default)());
-
-	exports.default = (0, _redux.createStore)(reducer, middleware);
-
-/***/ },
-/* 393 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _core = __webpack_require__(394);
-
-	var _helpers = __webpack_require__(395);
-
-	var _defaults = __webpack_require__(398);
-
-	var _defaults2 = _interopRequireDefault(_defaults);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	/**
-	 * Creates logger with following options
-	 *
-	 * @namespace
-	 * @param {object} options - options for logger
-	 * @param {string | function | object} options.level - console[level]
-	 * @param {boolean} options.duration - print duration of each action?
-	 * @param {boolean} options.timestamp - print timestamp with each action?
-	 * @param {object} options.colors - custom colors
-	 * @param {object} options.logger - implementation of the `console` API
-	 * @param {boolean} options.logErrors - should errors in action execution be caught, logged, and re-thrown?
-	 * @param {boolean} options.collapsed - is group collapsed?
-	 * @param {boolean} options.predicate - condition which resolves logger behavior
-	 * @param {function} options.stateTransformer - transform state before print
-	 * @param {function} options.actionTransformer - transform action before print
-	 * @param {function} options.errorTransformer - transform error before print
-	 *
-	 * @returns {function} logger middleware
-	 */
-	function createLogger() {
-	  var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
-
-	  var loggerOptions = _extends({}, _defaults2.default, options);
-
-	  var logger = loggerOptions.logger;
-	  var transformer = loggerOptions.transformer;
-	  var stateTransformer = loggerOptions.stateTransformer;
-	  var errorTransformer = loggerOptions.errorTransformer;
-	  var predicate = loggerOptions.predicate;
-	  var logErrors = loggerOptions.logErrors;
-	  var diffPredicate = loggerOptions.diffPredicate;
-
-	  // Return if 'console' object is not defined
-
-	  if (typeof logger === 'undefined') {
-	    return function () {
-	      return function (next) {
-	        return function (action) {
-	          return next(action);
-	        };
-	      };
-	    };
-	  }
-
-	  if (transformer) {
-	    console.error('Option \'transformer\' is deprecated, use \'stateTransformer\' instead!'); // eslint-disable-line no-console
-	  }
-
-	  var logBuffer = [];
-
-	  return function (_ref) {
-	    var getState = _ref.getState;
-	    return function (next) {
-	      return function (action) {
-	        // Exit early if predicate function returns 'false'
-	        if (typeof predicate === 'function' && !predicate(getState, action)) {
-	          return next(action);
-	        }
-
-	        var logEntry = {};
-	        logBuffer.push(logEntry);
-
-	        logEntry.started = _helpers.timer.now();
-	        logEntry.startedTime = new Date();
-	        logEntry.prevState = stateTransformer(getState());
-	        logEntry.action = action;
-
-	        var returnedValue = undefined;
-	        if (logErrors) {
-	          try {
-	            returnedValue = next(action);
-	          } catch (e) {
-	            logEntry.error = errorTransformer(e);
-	          }
-	        } else {
-	          returnedValue = next(action);
-	        }
-
-	        logEntry.took = _helpers.timer.now() - logEntry.started;
-	        logEntry.nextState = stateTransformer(getState());
-
-	        var diff = loggerOptions.diff && typeof diffPredicate === 'function' ? diffPredicate(getState, action) : loggerOptions.diff;
-
-	        (0, _core.printBuffer)(logBuffer, _extends({}, loggerOptions, { diff: diff }));
-	        logBuffer.length = 0;
-
-	        if (logEntry.error) throw logEntry.error;
-	        return returnedValue;
-	      };
-	    };
-	  };
-	}
-
-	exports.default = createLogger;
-	module.exports = exports['default'];
-
-/***/ },
-/* 394 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.printBuffer = printBuffer;
-
-	var _helpers = __webpack_require__(395);
-
-	var _diff = __webpack_require__(396);
-
-	var _diff2 = _interopRequireDefault(_diff);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
-	function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
-
-	/**
-	 * Get log level string based on supplied params
-	 *
-	 * @param {string | function | object} level - console[level]
-	 * @param {object} action - selected action
-	 * @param {array} payload - selected payload
-	 * @param {string} type - log entry type
-	 *
-	 * @returns {string} level
-	 */
-	function getLogLevel(level, action, payload, type) {
-	  switch (typeof level === 'undefined' ? 'undefined' : _typeof(level)) {
-	    case 'object':
-	      return typeof level[type] === 'function' ? level[type].apply(level, _toConsumableArray(payload)) : level[type];
-	    case 'function':
-	      return level(action);
-	    default:
-	      return level;
-	  }
-	}
-
-	function defaultTitleFormatter(options) {
-	  var timestamp = options.timestamp;
-	  var duration = options.duration;
-
-	  return function (action, time, took) {
-	    var parts = ['action'];
-	    if (timestamp) {
-	      parts.push('@ ' + time);
-	    }
-	    parts.push(action.type);
-	    if (duration) {
-	      parts.push('(in ' + took.toFixed(2) + ' ms)');
-	    }
-	    return parts.join(' ');
-	  };
-	}
-
-	function printBuffer(buffer, options) {
-	  var logger = options.logger;
-	  var actionTransformer = options.actionTransformer;
-	  var _options$titleFormatt = options.titleFormatter;
-	  var titleFormatter = _options$titleFormatt === undefined ? defaultTitleFormatter(options) : _options$titleFormatt;
-	  var collapsed = options.collapsed;
-	  var colors = options.colors;
-	  var level = options.level;
-	  var diff = options.diff;
-
-	  buffer.forEach(function (logEntry, key) {
-	    var started = logEntry.started;
-	    var startedTime = logEntry.startedTime;
-	    var action = logEntry.action;
-	    var prevState = logEntry.prevState;
-	    var error = logEntry.error;
-	    var took = logEntry.took;
-	    var nextState = logEntry.nextState;
-
-	    var nextEntry = buffer[key + 1];
-
-	    if (nextEntry) {
-	      nextState = nextEntry.prevState;
-	      took = nextEntry.started - started;
-	    }
-
-	    // Message
-	    var formattedAction = actionTransformer(action);
-	    var isCollapsed = typeof collapsed === 'function' ? collapsed(function () {
-	      return nextState;
-	    }, action) : collapsed;
-
-	    var formattedTime = (0, _helpers.formatTime)(startedTime);
-	    var titleCSS = colors.title ? 'color: ' + colors.title(formattedAction) + ';' : null;
-	    var title = titleFormatter(formattedAction, formattedTime, took);
-
-	    // Render
-	    try {
-	      if (isCollapsed) {
-	        if (colors.title) logger.groupCollapsed('%c ' + title, titleCSS);else logger.groupCollapsed(title);
-	      } else {
-	        if (colors.title) logger.group('%c ' + title, titleCSS);else logger.group(title);
-	      }
-	    } catch (e) {
-	      logger.log(title);
-	    }
-
-	    var prevStateLevel = getLogLevel(level, formattedAction, [prevState], 'prevState');
-	    var actionLevel = getLogLevel(level, formattedAction, [formattedAction], 'action');
-	    var errorLevel = getLogLevel(level, formattedAction, [error, prevState], 'error');
-	    var nextStateLevel = getLogLevel(level, formattedAction, [nextState], 'nextState');
-
-	    if (prevStateLevel) {
-	      if (colors.prevState) logger[prevStateLevel]('%c prev state', 'color: ' + colors.prevState(prevState) + '; font-weight: bold', prevState);else logger[prevStateLevel]('prev state', prevState);
-	    }
-
-	    if (actionLevel) {
-	      if (colors.action) logger[actionLevel]('%c action', 'color: ' + colors.action(formattedAction) + '; font-weight: bold', formattedAction);else logger[actionLevel]('action', formattedAction);
-	    }
-
-	    if (error && errorLevel) {
-	      if (colors.error) logger[errorLevel]('%c error', 'color: ' + colors.error(error, prevState) + '; font-weight: bold', error);else logger[errorLevel]('error', error);
-	    }
-
-	    if (nextStateLevel) {
-	      if (colors.nextState) logger[nextStateLevel]('%c next state', 'color: ' + colors.nextState(nextState) + '; font-weight: bold', nextState);else logger[nextStateLevel]('next state', nextState);
-	    }
-
-	    if (diff) {
-	      (0, _diff2.default)(prevState, nextState, logger, isCollapsed);
-	    }
-
-	    try {
-	      logger.groupEnd();
-	    } catch (e) {
-	      logger.log('—— log end ——');
-	    }
-	  });
-	}
-
-/***/ },
-/* 395 */
-/***/ function(module, exports) {
-
-	"use strict";
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	var repeat = exports.repeat = function repeat(str, times) {
-	  return new Array(times + 1).join(str);
-	};
-
-	var pad = exports.pad = function pad(num, maxLength) {
-	  return repeat("0", maxLength - num.toString().length) + num;
-	};
-
-	var formatTime = exports.formatTime = function formatTime(time) {
-	  return pad(time.getHours(), 2) + ":" + pad(time.getMinutes(), 2) + ":" + pad(time.getSeconds(), 2) + "." + pad(time.getMilliseconds(), 3);
-	};
-
-	// Use performance API if it's available in order to get better precision
-	var timer = exports.timer = typeof performance !== "undefined" && performance !== null && typeof performance.now === "function" ? performance : Date;
-
-/***/ },
-/* 396 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.default = diffLogger;
-
-	var _deepDiff = __webpack_require__(397);
-
-	var _deepDiff2 = _interopRequireDefault(_deepDiff);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	// https://github.com/flitbit/diff#differences
-	var dictionary = {
-	  'E': {
-	    color: '#2196F3',
-	    text: 'CHANGED:'
-	  },
-	  'N': {
-	    color: '#4CAF50',
-	    text: 'ADDED:'
-	  },
-	  'D': {
-	    color: '#F44336',
-	    text: 'DELETED:'
-	  },
-	  'A': {
-	    color: '#2196F3',
-	    text: 'ARRAY:'
-	  }
-	};
-
-	function style(kind) {
-	  return 'color: ' + dictionary[kind].color + '; font-weight: bold';
-	}
-
-	function render(diff) {
-	  var kind = diff.kind;
-	  var path = diff.path;
-	  var lhs = diff.lhs;
-	  var rhs = diff.rhs;
-	  var index = diff.index;
-	  var item = diff.item;
-
-	  switch (kind) {
-	    case 'E':
-	      return path.join('.') + ' ' + lhs + ' → ' + rhs;
-	    case 'N':
-	      return path.join('.') + ' ' + rhs;
-	    case 'D':
-	      return '' + path.join('.');
-	    case 'A':
-	      return [path.join('.') + '[' + index + ']', item];
-	    default:
-	      return null;
-	  }
-	}
-
-	function diffLogger(prevState, newState, logger, isCollapsed) {
-	  var diff = (0, _deepDiff2.default)(prevState, newState);
-
-	  try {
-	    if (isCollapsed) {
-	      logger.groupCollapsed('diff');
-	    } else {
-	      logger.group('diff');
-	    }
-	  } catch (e) {
-	    logger.log('diff');
-	  }
-
-	  if (diff) {
-	    diff.forEach(function (elem) {
-	      var kind = elem.kind;
-
-	      var output = render(elem);
-
-	      logger.log('%c ' + dictionary[kind].text, style(kind), output);
-	    });
-	  } else {
-	    logger.log('—— no diff ——');
-	  }
-
-	  try {
-	    logger.groupEnd();
-	  } catch (e) {
-	    logger.log('—— diff end —— ');
-	  }
-	}
-	module.exports = exports['default'];
-
-/***/ },
-/* 397 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(global) {/*!
-	 * deep-diff.
-	 * Licensed under the MIT License.
-	 */
-	;(function(root, factory) {
-	  'use strict';
-	  if (true) {
-	    // AMD. Register as an anonymous module.
-	    !(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = function() {
-	      return factory();
-	    }.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-	  } else if (typeof exports === 'object') {
-	    // Node. Does not work with strict CommonJS, but
-	    // only CommonJS-like environments that support module.exports,
-	    // like Node.
-	    module.exports = factory();
-	  } else {
-	    // Browser globals (root is window)
-	    root.DeepDiff = factory();
-	  }
-	}(this, function(undefined) {
-	  'use strict';
-
-	  var $scope, conflict, conflictResolution = [];
-	  if (typeof global === 'object' && global) {
-	    $scope = global;
-	  } else if (typeof window !== 'undefined') {
-	    $scope = window;
-	  } else {
-	    $scope = {};
-	  }
-	  conflict = $scope.DeepDiff;
-	  if (conflict) {
-	    conflictResolution.push(
-	      function() {
-	        if ('undefined' !== typeof conflict && $scope.DeepDiff === accumulateDiff) {
-	          $scope.DeepDiff = conflict;
-	          conflict = undefined;
-	        }
-	      });
-	  }
-
-	  // nodejs compatible on server side and in the browser.
-	  function inherits(ctor, superCtor) {
-	    ctor.super_ = superCtor;
-	    ctor.prototype = Object.create(superCtor.prototype, {
-	      constructor: {
-	        value: ctor,
-	        enumerable: false,
-	        writable: true,
-	        configurable: true
-	      }
-	    });
-	  }
-
-	  function Diff(kind, path) {
-	    Object.defineProperty(this, 'kind', {
-	      value: kind,
-	      enumerable: true
-	    });
-	    if (path && path.length) {
-	      Object.defineProperty(this, 'path', {
-	        value: path,
-	        enumerable: true
-	      });
-	    }
-	  }
-
-	  function DiffEdit(path, origin, value) {
-	    DiffEdit.super_.call(this, 'E', path);
-	    Object.defineProperty(this, 'lhs', {
-	      value: origin,
-	      enumerable: true
-	    });
-	    Object.defineProperty(this, 'rhs', {
-	      value: value,
-	      enumerable: true
-	    });
-	  }
-	  inherits(DiffEdit, Diff);
-
-	  function DiffNew(path, value) {
-	    DiffNew.super_.call(this, 'N', path);
-	    Object.defineProperty(this, 'rhs', {
-	      value: value,
-	      enumerable: true
-	    });
-	  }
-	  inherits(DiffNew, Diff);
-
-	  function DiffDeleted(path, value) {
-	    DiffDeleted.super_.call(this, 'D', path);
-	    Object.defineProperty(this, 'lhs', {
-	      value: value,
-	      enumerable: true
-	    });
-	  }
-	  inherits(DiffDeleted, Diff);
-
-	  function DiffArray(path, index, item) {
-	    DiffArray.super_.call(this, 'A', path);
-	    Object.defineProperty(this, 'index', {
-	      value: index,
-	      enumerable: true
-	    });
-	    Object.defineProperty(this, 'item', {
-	      value: item,
-	      enumerable: true
-	    });
-	  }
-	  inherits(DiffArray, Diff);
-
-	  function arrayRemove(arr, from, to) {
-	    var rest = arr.slice((to || from) + 1 || arr.length);
-	    arr.length = from < 0 ? arr.length + from : from;
-	    arr.push.apply(arr, rest);
-	    return arr;
-	  }
-
-	  function realTypeOf(subject) {
-	    var type = typeof subject;
-	    if (type !== 'object') {
-	      return type;
-	    }
-
-	    if (subject === Math) {
-	      return 'math';
-	    } else if (subject === null) {
-	      return 'null';
-	    } else if (Array.isArray(subject)) {
-	      return 'array';
-	    } else if (Object.prototype.toString.call(subject) === '[object Date]') {
-	      return 'date';
-	    } else if (typeof subject.toString !== 'undefined' && /^\/.*\//.test(subject.toString())) {
-	      return 'regexp';
-	    }
-	    return 'object';
-	  }
-
-	  function deepDiff(lhs, rhs, changes, prefilter, path, key, stack) {
-	    path = path || [];
-	    var currentPath = path.slice(0);
-	    if (typeof key !== 'undefined') {
-	      if (prefilter) {
-	        if (typeof(prefilter) === 'function' && prefilter(currentPath, key)) { return; }
-	        else if (typeof(prefilter) === 'object') {
-	          if (prefilter.prefilter && prefilter.prefilter(currentPath, key)) { return; }
-	          if (prefilter.normalize) {
-	            var alt = prefilter.normalize(currentPath, key, lhs, rhs);
-	            if (alt) {
-	              lhs = alt[0];
-	              rhs = alt[1];
-	            }
-	          }
-	        }
-	      }
-	      currentPath.push(key);
-	    }
-
-	    // Use string comparison for regexes
-	    if (realTypeOf(lhs) === 'regexp' && realTypeOf(rhs) === 'regexp') {
-	      lhs = lhs.toString();
-	      rhs = rhs.toString();
-	    }
-
-	    var ltype = typeof lhs;
-	    var rtype = typeof rhs;
-	    if (ltype === 'undefined') {
-	      if (rtype !== 'undefined') {
-	        changes(new DiffNew(currentPath, rhs));
-	      }
-	    } else if (rtype === 'undefined') {
-	      changes(new DiffDeleted(currentPath, lhs));
-	    } else if (realTypeOf(lhs) !== realTypeOf(rhs)) {
-	      changes(new DiffEdit(currentPath, lhs, rhs));
-	    } else if (Object.prototype.toString.call(lhs) === '[object Date]' && Object.prototype.toString.call(rhs) === '[object Date]' && ((lhs - rhs) !== 0)) {
-	      changes(new DiffEdit(currentPath, lhs, rhs));
-	    } else if (ltype === 'object' && lhs !== null && rhs !== null) {
-	      stack = stack || [];
-	      if (stack.indexOf(lhs) < 0) {
-	        stack.push(lhs);
-	        if (Array.isArray(lhs)) {
-	          var i, len = lhs.length;
-	          for (i = 0; i < lhs.length; i++) {
-	            if (i >= rhs.length) {
-	              changes(new DiffArray(currentPath, i, new DiffDeleted(undefined, lhs[i])));
-	            } else {
-	              deepDiff(lhs[i], rhs[i], changes, prefilter, currentPath, i, stack);
-	            }
-	          }
-	          while (i < rhs.length) {
-	            changes(new DiffArray(currentPath, i, new DiffNew(undefined, rhs[i++])));
-	          }
-	        } else {
-	          var akeys = Object.keys(lhs);
-	          var pkeys = Object.keys(rhs);
-	          akeys.forEach(function(k, i) {
-	            var other = pkeys.indexOf(k);
-	            if (other >= 0) {
-	              deepDiff(lhs[k], rhs[k], changes, prefilter, currentPath, k, stack);
-	              pkeys = arrayRemove(pkeys, other);
-	            } else {
-	              deepDiff(lhs[k], undefined, changes, prefilter, currentPath, k, stack);
-	            }
-	          });
-	          pkeys.forEach(function(k) {
-	            deepDiff(undefined, rhs[k], changes, prefilter, currentPath, k, stack);
-	          });
-	        }
-	        stack.length = stack.length - 1;
-	      }
-	    } else if (lhs !== rhs) {
-	      if (!(ltype === 'number' && isNaN(lhs) && isNaN(rhs))) {
-	        changes(new DiffEdit(currentPath, lhs, rhs));
-	      }
-	    }
-	  }
-
-	  function accumulateDiff(lhs, rhs, prefilter, accum) {
-	    accum = accum || [];
-	    deepDiff(lhs, rhs,
-	      function(diff) {
-	        if (diff) {
-	          accum.push(diff);
-	        }
-	      },
-	      prefilter);
-	    return (accum.length) ? accum : undefined;
-	  }
-
-	  function applyArrayChange(arr, index, change) {
-	    if (change.path && change.path.length) {
-	      var it = arr[index],
-	          i, u = change.path.length - 1;
-	      for (i = 0; i < u; i++) {
-	        it = it[change.path[i]];
-	      }
-	      switch (change.kind) {
-	        case 'A':
-	          applyArrayChange(it[change.path[i]], change.index, change.item);
-	          break;
-	        case 'D':
-	          delete it[change.path[i]];
-	          break;
-	        case 'E':
-	        case 'N':
-	          it[change.path[i]] = change.rhs;
-	          break;
-	      }
-	    } else {
-	      switch (change.kind) {
-	        case 'A':
-	          applyArrayChange(arr[index], change.index, change.item);
-	          break;
-	        case 'D':
-	          arr = arrayRemove(arr, index);
-	          break;
-	        case 'E':
-	        case 'N':
-	          arr[index] = change.rhs;
-	          break;
-	      }
-	    }
-	    return arr;
-	  }
-
-	  function applyChange(target, source, change) {
-	    if (target && source && change && change.kind) {
-	      var it = target,
-	          i = -1,
-	          last = change.path ? change.path.length - 1 : 0;
-	      while (++i < last) {
-	        if (typeof it[change.path[i]] === 'undefined') {
-	          it[change.path[i]] = (typeof change.path[i] === 'number') ? [] : {};
-	        }
-	        it = it[change.path[i]];
-	      }
-	      switch (change.kind) {
-	        case 'A':
-	          applyArrayChange(change.path ? it[change.path[i]] : it, change.index, change.item);
-	          break;
-	        case 'D':
-	          delete it[change.path[i]];
-	          break;
-	        case 'E':
-	        case 'N':
-	          it[change.path[i]] = change.rhs;
-	          break;
-	      }
-	    }
-	  }
-
-	  function revertArrayChange(arr, index, change) {
-	    if (change.path && change.path.length) {
-	      // the structure of the object at the index has changed...
-	      var it = arr[index],
-	          i, u = change.path.length - 1;
-	      for (i = 0; i < u; i++) {
-	        it = it[change.path[i]];
-	      }
-	      switch (change.kind) {
-	        case 'A':
-	          revertArrayChange(it[change.path[i]], change.index, change.item);
-	          break;
-	        case 'D':
-	          it[change.path[i]] = change.lhs;
-	          break;
-	        case 'E':
-	          it[change.path[i]] = change.lhs;
-	          break;
-	        case 'N':
-	          delete it[change.path[i]];
-	          break;
-	      }
-	    } else {
-	      // the array item is different...
-	      switch (change.kind) {
-	        case 'A':
-	          revertArrayChange(arr[index], change.index, change.item);
-	          break;
-	        case 'D':
-	          arr[index] = change.lhs;
-	          break;
-	        case 'E':
-	          arr[index] = change.lhs;
-	          break;
-	        case 'N':
-	          arr = arrayRemove(arr, index);
-	          break;
-	      }
-	    }
-	    return arr;
-	  }
-
-	  function revertChange(target, source, change) {
-	    if (target && source && change && change.kind) {
-	      var it = target,
-	          i, u;
-	      u = change.path.length - 1;
-	      for (i = 0; i < u; i++) {
-	        if (typeof it[change.path[i]] === 'undefined') {
-	          it[change.path[i]] = {};
-	        }
-	        it = it[change.path[i]];
-	      }
-	      switch (change.kind) {
-	        case 'A':
-	          // Array was modified...
-	          // it will be an array...
-	          revertArrayChange(it[change.path[i]], change.index, change.item);
-	          break;
-	        case 'D':
-	          // Item was deleted...
-	          it[change.path[i]] = change.lhs;
-	          break;
-	        case 'E':
-	          // Item was edited...
-	          it[change.path[i]] = change.lhs;
-	          break;
-	        case 'N':
-	          // Item is new...
-	          delete it[change.path[i]];
-	          break;
-	      }
-	    }
-	  }
-
-	  function applyDiff(target, source, filter) {
-	    if (target && source) {
-	      var onChange = function(change) {
-	        if (!filter || filter(target, source, change)) {
-	          applyChange(target, source, change);
-	        }
-	      };
-	      deepDiff(target, source, onChange);
-	    }
-	  }
-
-	  Object.defineProperties(accumulateDiff, {
-
-	    diff: {
-	      value: accumulateDiff,
-	      enumerable: true
-	    },
-	    observableDiff: {
-	      value: deepDiff,
-	      enumerable: true
-	    },
-	    applyDiff: {
-	      value: applyDiff,
-	      enumerable: true
-	    },
-	    applyChange: {
-	      value: applyChange,
-	      enumerable: true
-	    },
-	    revertChange: {
-	      value: revertChange,
-	      enumerable: true
-	    },
-	    isConflict: {
-	      value: function() {
-	        return 'undefined' !== typeof conflict;
-	      },
-	      enumerable: true
-	    },
-	    noConflict: {
-	      value: function() {
-	        if (conflictResolution) {
-	          conflictResolution.forEach(function(it) {
-	            it();
-	          });
-	          conflictResolution = null;
-	        }
-	        return accumulateDiff;
-	      },
-	      enumerable: true
-	    }
-	  });
-
-	  return accumulateDiff;
-	}));
-
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
-
-/***/ },
-/* 398 */
-/***/ function(module, exports) {
-
-	"use strict";
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.default = {
-	  level: "log",
-	  logger: console,
-	  logErrors: true,
-	  collapsed: undefined,
-	  predicate: undefined,
-	  duration: false,
-	  timestamp: true,
-	  stateTransformer: function stateTransformer(state) {
-	    return state;
-	  },
-	  actionTransformer: function actionTransformer(action) {
-	    return action;
-	  },
-	  errorTransformer: function errorTransformer(error) {
-	    return error;
-	  },
-	  colors: {
-	    title: function title() {
-	      return "inherit";
-	    },
-	    prevState: function prevState() {
-	      return "#9E9E9E";
-	    },
-	    action: function action() {
-	      return "#03A9F4";
-	    },
-	    nextState: function nextState() {
-	      return "#4CAF50";
-	    },
-	    error: function error() {
-	      return "#F20404";
-	    }
-	  },
-	  diff: false,
-	  diffPredicate: undefined,
-
-	  // Deprecated options
-	  transformer: undefined
-	};
-	module.exports = exports['default'];
-
-/***/ },
-/* 399 */
-/***/ function(module, exports) {
-
-	'use strict';
-
-	exports.__esModule = true;
-	function createThunkMiddleware(extraArgument) {
-	  return function (_ref) {
-	    var dispatch = _ref.dispatch;
-	    var getState = _ref.getState;
-	    return function (next) {
-	      return function (action) {
-	        if (typeof action === 'function') {
-	          return action(dispatch, getState, extraArgument);
-	        }
-
-	        return next(action);
-	      };
-	    };
-	  };
-	}
-
-	var thunk = createThunkMiddleware();
-	thunk.withExtraArgument = createThunkMiddleware;
-
-	exports['default'] = thunk;
-
-/***/ },
-/* 400 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
-
-	exports.default = promiseMiddleware;
-
-	var _isPromise = __webpack_require__(401);
-
-	var _isPromise2 = _interopRequireDefault(_isPromise);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	var defaultTypes = ['PENDING', 'FULFILLED', 'REJECTED'];
-
-	/**
-	 * @function promiseMiddleware
-	 * @description
-	 * @returns {function} thunk
-	 */
-	function promiseMiddleware() {
-	  var config = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
-	  var promiseTypeSuffixes = config.promiseTypeSuffixes || defaultTypes;
-
-	  return function (ref) {
-	    var dispatch = ref.dispatch;
-
-
-	    return function (next) {
-	      return function (action) {
-	        if (action.payload) {
-	          if (!(0, _isPromise2.default)(action.payload) && !(0, _isPromise2.default)(action.payload.promise)) {
-	            return next(action);
-	          }
-	        } else {
-	          return next(action);
-	        }
-
-	        // Deconstruct the properties of the original action object to constants
-	        var type = action.type,
-	            payload = action.payload,
-	            meta = action.meta;
-
-	        // Assign values for promise type suffixes
-
-	        var _promiseTypeSuffixes = _slicedToArray(promiseTypeSuffixes, 3),
-	            PENDING = _promiseTypeSuffixes[0],
-	            FULFILLED = _promiseTypeSuffixes[1],
-	            REJECTED = _promiseTypeSuffixes[2];
-
-	        /**
-	         * @function getAction
-	         * @description Utility function for creating a rejected or fulfilled
-	         * flux standard action object.
-	         * @param {boolean} Is the action rejected?
-	         * @returns {object} action
-	         */
-
-
-	        var getAction = function getAction(newPayload, isRejected) {
-	          return _extends({
-	            type: type + '_' + (isRejected ? REJECTED : FULFILLED)
-	          }, newPayload === null || typeof newPayload === 'undefined' ? {} : {
-	            payload: newPayload
-	          }, meta !== undefined ? { meta: meta } : {}, isRejected ? {
-	            error: true
-	          } : {});
-	        };
-
-	        /**
-	         * Assign values for promise and data variables. In the case the payload
-	         * is an object with a `promise` and `data` property, the values of those
-	         * properties will be used. In the case the payload is a promise, the
-	         * value of the payload will be used and data will be null.
-	         */
-	        var promise = void 0;
-	        var data = void 0;
-
-	        if (!(0, _isPromise2.default)(action.payload) && _typeof(action.payload) === 'object') {
-	          promise = payload.promise;
-	          data = payload.data;
-	        } else {
-	          promise = payload;
-	          data = undefined;
-	        }
-
-	        /**
-	         * First, dispatch the pending action. This flux standard action object
-	         * describes the pending state of a promise and will include any data
-	         * (for optimistic updates) and/or meta from the original action.
-	         */
-	        next(_extends({
-	          type: type + '_' + PENDING
-	        }, data !== undefined ? { payload: data } : {}, meta !== undefined ? { meta: meta } : {}));
-
-	        /*
-	         * @function handleReject
-	         * @description Dispatch the rejected action and return
-	         * an error object. The error object is the original error
-	         * that was thrown. The user of the library is responsible for
-	         * best practices in ensure that they are throwing an Error object.
-	         * @params reason The reason the promise was rejected
-	         * @returns {object}
-	         */
-	        var handleReject = function handleReject(reason) {
-	          var rejectedAction = getAction(reason, true);
-	          dispatch(rejectedAction);
-	          throw reason;
-	        };
-
-	        /*
-	         * @function handleFulfill
-	         * @description Dispatch the fulfilled action and
-	         * return the success object. The success object should
-	         * contain the value and the dispatched action.
-	         * @param value The value the promise was resloved with
-	         * @returns {object}
-	         */
-	        var handleFulfill = function handleFulfill() {
-	          var value = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
-
-	          var resolvedAction = getAction(value, false);
-	          dispatch(resolvedAction);
-
-	          return { value: value, action: resolvedAction };
-	        };
-
-	        /**
-	         * Second, dispatch a rejected or fulfilled action. This flux standard
-	         * action object will describe the resolved state of the promise. In
-	         * the case of a rejected promise, it will include an `error` property.
-	         *
-	         * In order to allow proper chaining of actions using `then`, a new
-	         * promise is constructed and returned. This promise will resolve
-	         * with two properties: (1) the value (if fulfilled) or reason
-	         * (if rejected) and (2) the flux standard action.
-	         *
-	         * Rejected object:
-	         * {
-	         *   reason: ...
-	         *   action: {
-	         *     error: true,
-	         *     type: 'ACTION_REJECTED',
-	         *     payload: ...
-	         *   }
-	         * }
-	         *
-	         * Fulfilled object:
-	         * {
-	         *   value: ...
-	         *   action: {
-	         *     type: 'ACTION_FULFILLED',
-	         *     payload: ...
-	         *   }
-	         * }
-	         */
-	        return promise.then(handleFulfill, handleReject);
-	      };
-	    };
-	  };
-	}
-
-/***/ },
-/* 401 */
-/***/ function(module, exports) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-	exports.default = isPromise;
-	function isPromise(value) {
-	  if (value !== null && (typeof value === 'undefined' ? 'undefined' : _typeof(value)) === 'object') {
-	    return value && typeof value.then === 'function';
-	  }
-
-	  return false;
-	}
-
-/***/ },
-/* 402 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	    value: true
-	});
-	exports.messages = exports.socket = exports.chatInput = exports.chatServer = exports.muted = exports.users = exports.user = undefined;
-
-	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-	var _reactAddonsUpdate = __webpack_require__(403);
-
-	var _reactAddonsUpdate2 = _interopRequireDefault(_reactAddonsUpdate);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
-	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-	var user = function user() {
-	    var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-	    var action = arguments[1];
-
-	    switch (action.type) {
-	        case 'SIGN_IN_USER':
-	            return _extends({}, state, action.payload);
-	    }
-	    return state;
-	},
-	    users = function users() {
-	    var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : { idleUsers: [], activeUsers: [] };
-	    var action = arguments[1];
-
-	    switch (action.type) {
-	        case 'CHAT_SERVER_CONNECTED':
-	            return action.payload;
-	        case 'UPDATE_USERS':
-	            return action.payload;
-	    }
-	    return state;
-	},
-	    muted = function muted() {
-	    var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-	    var action = arguments[1];
-
-	    switch (action.type) {
-	        case 'TOGGLE_MUTE':
-	            var userMuteState = state[action.payload];
-	            return _extends({}, state, _defineProperty({}, action.payload, !userMuteState));
-	    }
-	    return state;
-	},
-	    chatServer = function chatServer() {
-	    var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
-	    var action = arguments[1];
-
-	    switch (action.type) {
-	        case 'CONNECTING_CHAT_SERVER':
-	            return 'connecting';
-	        case 'CHAT_SERVER_CONNECTED':
-	            return 'connected';
-	        case 'ERROR_CONNECTING_CHAT_SERVER':
-	            return 'error';
-	    }
-	    return state;
-	},
-	    chatInput = function chatInput() {
-	    var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
-	    var action = arguments[1];
-
-	    switch (action.type) {
-	        case 'TYPING':
-	            return action.payload;
-	        case 'CLEAR_INPUT':
-	            return '';
-	    }
-	    return state;
-	},
-	    socket = function socket() {
-	    var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-	    var action = arguments[1];
-
-	    switch (action.type) {
-	        case 'REGISTER_SOCKET':
-	            return action.payload;
-	    }
-	    return state;
-	},
-	    messages = function messages() {
-	    var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
-	    var action = arguments[1];
-
-	    switch (action.type) {
-	        case 'INCOMING_MESSAGE':
-	            return [].concat(_toConsumableArray(state), [action.payload]);
-	    }
-	    return state;
-	};
-
-	exports.user = user;
-	exports.users = users;
-	exports.muted = muted;
-	exports.chatServer = chatServer;
-	exports.chatInput = chatInput;
-	exports.socket = socket;
-	exports.messages = messages;
-
-/***/ },
-/* 403 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = __webpack_require__(404);
-
-/***/ },
-/* 404 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(process) {/**
-	 * Copyright 2013-present, Facebook, Inc.
-	 * All rights reserved.
-	 *
-	 * This source code is licensed under the BSD-style license found in the
-	 * LICENSE file in the root directory of this source tree. An additional grant
-	 * of patent rights can be found in the PATENTS file in the same directory.
-	 *
-	 */
-
-	/* global hasOwnProperty:true */
-
-	'use strict';
-
-	var _prodInvariant = __webpack_require__(7),
-	    _assign = __webpack_require__(4);
-
-	var invariant = __webpack_require__(8);
-	var hasOwnProperty = {}.hasOwnProperty;
-
-	function shallowCopy(x) {
-	  if (Array.isArray(x)) {
-	    return x.concat();
-	  } else if (x && typeof x === 'object') {
-	    return _assign(new x.constructor(), x);
-	  } else {
-	    return x;
-	  }
-	}
-
-	var COMMAND_PUSH = '$push';
-	var COMMAND_UNSHIFT = '$unshift';
-	var COMMAND_SPLICE = '$splice';
-	var COMMAND_SET = '$set';
-	var COMMAND_MERGE = '$merge';
-	var COMMAND_APPLY = '$apply';
-
-	var ALL_COMMANDS_LIST = [COMMAND_PUSH, COMMAND_UNSHIFT, COMMAND_SPLICE, COMMAND_SET, COMMAND_MERGE, COMMAND_APPLY];
-
-	var ALL_COMMANDS_SET = {};
-
-	ALL_COMMANDS_LIST.forEach(function (command) {
-	  ALL_COMMANDS_SET[command] = true;
-	});
-
-	function invariantArrayCase(value, spec, command) {
-	  !Array.isArray(value) ? process.env.NODE_ENV !== 'production' ? invariant(false, 'update(): expected target of %s to be an array; got %s.', command, value) : _prodInvariant('1', command, value) : void 0;
-	  var specValue = spec[command];
-	  !Array.isArray(specValue) ? process.env.NODE_ENV !== 'production' ? invariant(false, 'update(): expected spec of %s to be an array; got %s. Did you forget to wrap your parameter in an array?', command, specValue) : _prodInvariant('2', command, specValue) : void 0;
-	}
-
-	/**
-	 * Returns a updated shallow copy of an object without mutating the original.
-	 * See https://facebook.github.io/react/docs/update.html for details.
-	 */
-	function update(value, spec) {
-	  !(typeof spec === 'object') ? process.env.NODE_ENV !== 'production' ? invariant(false, 'update(): You provided a key path to update() that did not contain one of %s. Did you forget to include {%s: ...}?', ALL_COMMANDS_LIST.join(', '), COMMAND_SET) : _prodInvariant('3', ALL_COMMANDS_LIST.join(', '), COMMAND_SET) : void 0;
-
-	  if (hasOwnProperty.call(spec, COMMAND_SET)) {
-	    !(Object.keys(spec).length === 1) ? process.env.NODE_ENV !== 'production' ? invariant(false, 'Cannot have more than one key in an object with %s', COMMAND_SET) : _prodInvariant('4', COMMAND_SET) : void 0;
-
-	    return spec[COMMAND_SET];
-	  }
-
-	  var nextValue = shallowCopy(value);
-
-	  if (hasOwnProperty.call(spec, COMMAND_MERGE)) {
-	    var mergeObj = spec[COMMAND_MERGE];
-	    !(mergeObj && typeof mergeObj === 'object') ? process.env.NODE_ENV !== 'production' ? invariant(false, 'update(): %s expects a spec of type \'object\'; got %s', COMMAND_MERGE, mergeObj) : _prodInvariant('5', COMMAND_MERGE, mergeObj) : void 0;
-	    !(nextValue && typeof nextValue === 'object') ? process.env.NODE_ENV !== 'production' ? invariant(false, 'update(): %s expects a target of type \'object\'; got %s', COMMAND_MERGE, nextValue) : _prodInvariant('6', COMMAND_MERGE, nextValue) : void 0;
-	    _assign(nextValue, spec[COMMAND_MERGE]);
-	  }
-
-	  if (hasOwnProperty.call(spec, COMMAND_PUSH)) {
-	    invariantArrayCase(value, spec, COMMAND_PUSH);
-	    spec[COMMAND_PUSH].forEach(function (item) {
-	      nextValue.push(item);
-	    });
-	  }
-
-	  if (hasOwnProperty.call(spec, COMMAND_UNSHIFT)) {
-	    invariantArrayCase(value, spec, COMMAND_UNSHIFT);
-	    spec[COMMAND_UNSHIFT].forEach(function (item) {
-	      nextValue.unshift(item);
-	    });
-	  }
-
-	  if (hasOwnProperty.call(spec, COMMAND_SPLICE)) {
-	    !Array.isArray(value) ? process.env.NODE_ENV !== 'production' ? invariant(false, 'Expected %s target to be an array; got %s', COMMAND_SPLICE, value) : _prodInvariant('7', COMMAND_SPLICE, value) : void 0;
-	    !Array.isArray(spec[COMMAND_SPLICE]) ? process.env.NODE_ENV !== 'production' ? invariant(false, 'update(): expected spec of %s to be an array of arrays; got %s. Did you forget to wrap your parameters in an array?', COMMAND_SPLICE, spec[COMMAND_SPLICE]) : _prodInvariant('8', COMMAND_SPLICE, spec[COMMAND_SPLICE]) : void 0;
-	    spec[COMMAND_SPLICE].forEach(function (args) {
-	      !Array.isArray(args) ? process.env.NODE_ENV !== 'production' ? invariant(false, 'update(): expected spec of %s to be an array of arrays; got %s. Did you forget to wrap your parameters in an array?', COMMAND_SPLICE, spec[COMMAND_SPLICE]) : _prodInvariant('8', COMMAND_SPLICE, spec[COMMAND_SPLICE]) : void 0;
-	      nextValue.splice.apply(nextValue, args);
-	    });
-	  }
-
-	  if (hasOwnProperty.call(spec, COMMAND_APPLY)) {
-	    !(typeof spec[COMMAND_APPLY] === 'function') ? process.env.NODE_ENV !== 'production' ? invariant(false, 'update(): expected spec of %s to be a function; got %s.', COMMAND_APPLY, spec[COMMAND_APPLY]) : _prodInvariant('9', COMMAND_APPLY, spec[COMMAND_APPLY]) : void 0;
-	    nextValue = spec[COMMAND_APPLY](nextValue);
-	  }
-
-	  for (var k in spec) {
-	    if (!(ALL_COMMANDS_SET.hasOwnProperty(k) && ALL_COMMANDS_SET[k])) {
-	      nextValue[k] = update(value[k], spec[k]);
-	    }
-	  }
-
-	  return nextValue;
-	}
-
-	module.exports = update;
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
-
-/***/ },
-/* 405 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	    value: true
-	});
-	exports.chatMessageScroll = exports.webSocket = undefined;
-
-	var _moment = __webpack_require__(224);
-
-	var _moment2 = _interopRequireDefault(_moment);
-
-	var _uniqid = __webpack_require__(406);
-
-	var _uniqid2 = _interopRequireDefault(_uniqid);
-
-	var _reactNotifyToast = __webpack_require__(390);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	var webSocket = function webSocket(store) {
-	    return function (next) {
-	        return function (action) {
-	            var dispatch = store.dispatch,
-	                _store$getState = store.getState(),
-	                socket = _store$getState.socket,
-	                user = _store$getState.user;
-
-	            switch (action.type) {
-	                case 'SIGN_IN_USER':
-	                    dispatch({ type: 'CONNECTING_CHAT_SERVER' });
-	                    return socket.emit('signInUser', action.payload, function (response) {
-	                        if (response) {
-	                            setTimeout(function () {
-	                                // 1 second delay for demonstration, as connection within localhost is fast
-	                                dispatch({
-	                                    type: 'CHAT_SERVER_CONNECTED',
-	                                    payload: response
-	                                });
-	                                next(action);
-	                            }, 1000);
-	                        } else {
-	                            dispatch({ type: 'ERROR_CONNECTING_CHAT_SERVER' });
-	                        }
-	                    });
-	                case 'SUBMIT_MESSAGE':
-	                    return socket.emit('message', {
-	                        user: user,
-	                        content: action.payload,
-	                        sent: (0, _moment2.default)(),
-	                        id: (0, _uniqid2.default)()
-	                    });
-	            }
-	            return next(action);
-	        };
-	    };
-	},
-	    chatMessageScroll = function chatMessageScroll(store) {
-	    return function (next) {
-	        return function (action) {
-	            var _store$getState2 = store.getState(),
-	                muted = _store$getState2.muted;
-
-	            switch (action.type) {
-	                case 'INCOMING_MESSAGE':
-	                    if (muted[action.payload.user.id]) {
-	                        return;
-	                    }
-	                    if (Math.abs($('.chat-messages')[0].scrollHeight - $('.chat-messages').scrollTop() - $('.chat-messages').outerHeight()) < 2) {
-	                        $('.chat-messages').animate({
-	                            scrollTop: $('.chat-messages')[0].scrollHeight
-	                        }, 400, 'linear');
-	                    } else {
-	                        _reactNotifyToast.notify.show('You have unread messages');
-	                    }
-	            }
-	            return next(action);
-	        };
-	    };
-	};
-
-	exports.webSocket = webSocket;
-	exports.chatMessageScroll = chatMessageScroll;
-
-/***/ },
-/* 406 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(process, module) {/* 
-	(The MIT License)
-	Copyright (c) 2014 Halász Ádám <mail@adamhalasz.com>
-	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-	The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-	*/
-
-	//  Unique Hexatridecimal ID Generator
-	// ================================================
-
-	//  Dependencies
-	// ================================================
-	var pid = process && process.pid ? process.pid.toString(36) : '' ;
-	var mac =  false ? require('macaddress').one(macHandler) : null ;
-	var address = mac ? parseInt(mac.replace(/\:|\D+/gi, '')).toString(36) : '' ;
-
-	//  Exports
-	// ================================================
-	module.exports         = function(prefix){ return (prefix || '') + address + pid + now().toString(36); }
-	module.exports.process = function(prefix){ return (prefix || '')           + pid + now().toString(36); }
-	module.exports.time    = function(prefix){ return (prefix || '')                 + now().toString(36); }
-
-	//  Helpers
-	// ================================================
-	function now(){
-	    var time = new Date().getTime();
-	    var last = now.last || time;
-	    return now.last = time > last ? time : last + 1;
-	}
-
-	function macHandler(error){
-	    if(module.parent.uniqid_debug){
-	        if(error) console.error('Info: No mac address - uniqid() falls back to uniqid.process().', error)
-	        if(pid == '') console.error('Info: No process.pid - uniqid.process() falls back to uniqid.time().')
-	    }
-	}
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3), __webpack_require__(203)(module)))
 
 /***/ }
 /******/ ]);

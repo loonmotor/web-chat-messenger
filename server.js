@@ -3,7 +3,8 @@ const
     , ecstatic = require('ecstatic')
     , server = http.createServer(ecstatic({root: `${__dirname}/public`}))
     , io = require('socket.io')(server)
-    , socketEventsHandler = require('./handlers/socket-events-handler');
+    , socketEventsHandler = require('./handlers/socket-events-handler')
+    , argv = require('minimist')(process.argv.slice(2));
 
 io.on('connection', (socket) => {
 
@@ -17,7 +18,7 @@ io.on('connection', (socket) => {
 
 });
 
-server.listen(3000, () => {
-    console.log('Server listening on port 3000');
+server.listen(argv.port || 3000, () => {
+    console.log(`Server listening on port ${argv.port || 3000}`);
 });
 

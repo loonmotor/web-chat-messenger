@@ -17,7 +17,6 @@ export default class App extends Component {
     }
     constructor(props) {
         super(props);
-        console.log(this.props.socket);
         this.props.dispatch(registerSocket(this.props.socket));
     }
     render() {
