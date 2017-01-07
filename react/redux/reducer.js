@@ -1,5 +1,3 @@
-import update from 'react-addons-update';
-
 const
     user = (state = {}, action) => {
         switch (action.type) {
