@@ -11,14 +11,6 @@ export default class FacebookLoginContainer extends Component {
     responseFacebook(response) {
         if (response.id) {
             this.props.dispatch(signInUser(response));
-            cookie.save('user', JSON.stringify(response));
-        }
-    }
-    componentDidMount() {
-        const
-            user = cookie.load('user');
-        if (user) {
-            this.props.dispatch(signInUser(user));
         }
     }
     render() {
@@ -27,7 +19,7 @@ export default class FacebookLoginContainer extends Component {
 
                 <FacebookLogin
                     appId="371359853214253"
-                    autoLoad={false}
+                    autoLoad={true}
                     fields="name,email,picture"
                     callback={this.responseFacebook.bind(this)} />
 
