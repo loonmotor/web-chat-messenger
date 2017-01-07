@@ -28,12 +28,14 @@
 * User can identify himself with a **(me)** label appended to his name
 * Users are arranged alphabetically, in both Active and Idle sections
 #### Chats panel
+
 * User can see the history of chat on load
 * User can see his own messages (in blue card panels)
 * User can see other users' messages (in teal card panels)
 * If chats panel is currently scrolled to the bottom, it will scroll down automatically when there are new messages
 * If chats panel is not at the bottom, user will be notified of incoming messages by a toast
 #### Message input panel
+
 * User can type in a message
 * User can hit Enter to send a message
 * User can click the Send button to send a message
