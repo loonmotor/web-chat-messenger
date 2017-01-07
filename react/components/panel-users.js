@@ -1,33 +1,49 @@
 import React, {Component} from 'react';
 import {connect} from 'react-redux';
-import io from 'socket.io-client';
 import {updateUsers} from '../redux/action';
+import _ from 'lodash';
 
 @connect(store => ({
-    users: store.users
+    users: store.users,
+    socket: store.socket,
+    user: store.user
 }))
 export default class PanelUsers extends Component {
     componentDidMount() {
-        const
-            socket = io.connect('http://localhost:3000');
-        socket.on('updateUsers', users => {
+        this.props.socket.on('updateUsers', users => {
             this.props.dispatch(updateUsers(users));
         });
     }
     render() {
-        console.log(this.props);
         return (
             <div className="col s4 m2 panel-users">
-                <ul className="collection">
-                    {this.props.users.map(user => {
-                        return (
-                            <li key={user.id} className="collection-item">
-                                <img src={user.pictureUrl}/>
-                                {user.name}
-                            </li>
-                        );
-                    })}
-                </ul>
+                {this.props.users.activeUsers.length > 0 &&
+                    <div>
+                        <h6>Active users</h6>
+                        <ul className="collection active-users">
+                            {_.sortBy(this.props.users.activeUsers, o => o.name).map(user => {
+                                return (
+                                    <li key={user.id} className="collection-item avatar">
+                                        <img src={user.pictureUrl} className="circle"/>
+                                        <span className="title">{user.name} {this.props.user.id === user.id ? '(me)' : ''}</span>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    </div>
+                }
+                {this.props.users.idleUsers.length > 0 &&
+                    <ul className="collection">
+                        {_.sortBy(this.props.users.idleUsers, o => o.name).map(user => {
+                            return (
+                                <li key={user.id} className="collection-item avatar">
+                                    <img src={user.pictureUrl} className="circle"/>
+                                    <span className="title">{user.name} {this.props.user.id === user.id ? '(me)' : ''}</span>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                }
             </div>
         );
     }

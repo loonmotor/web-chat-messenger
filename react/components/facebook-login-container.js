@@ -9,8 +9,10 @@ import cookie from 'react-cookie';
 }))
 export default class FacebookLoginContainer extends Component {
     responseFacebook(response) {
-        this.props.dispatch(signInUser(response));
-        cookie.save('user', JSON.stringify(response));
+        if (response.id) {
+            this.props.dispatch(signInUser(response));
+            cookie.save('user', JSON.stringify(response));
+        }
     }
     componentDidMount() {
         const
