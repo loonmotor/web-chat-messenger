@@ -22,6 +22,7 @@
 ## Use cases & Features
 #### Sign in screen
 * User can sign in via Facebook
+
 #### Users panel
 * User can see a list of other signed in users, including himself, categorized by Active and Idle
 * User can identify himself with a **(me)** label appended to his name
