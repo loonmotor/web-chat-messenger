@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "build": "cross-env NODE_ENV=production port=3000 webpack"
+    "build": "cross-env NODE_ENV=production webpack"
   },
   "dependencies": {
     "async": "^2.1.4",
