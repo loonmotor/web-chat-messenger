@@ -28,10 +28,14 @@
 * User can see a list of other signed in users, including himself, categorized by Active and Idle
 * User can identify himself with a **(me)** label appended to his name
 * Users are arranged alphabetically, in both Active and Idle sections
+* User can mute other users, and they will no longer receive their messages
+* User will be removed from the list when he closes the tab/window
 
 #### Chats panel
 
 * User can see the history of chat on load
+* Users will be notified when other users sign in
+* Users will be notified when other users sign out
 * User can see his own messages (in blue card panels)
 * User can see other users' messages (in teal card panels)
 * If chats panel is currently scrolled to the bottom, it will scroll down automatically when there are new messages
