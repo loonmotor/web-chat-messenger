@@ -1,17 +1,15 @@
 # Web Chat Messenger
-<br>
+
 ## System requirements
 * MongoDB installed at default port
 * Redis installed at default port
 * I am using NodeJS version 6.9.2
-<br><br>
+
 ## To run app
 * In terminal, ***cd*** to **web-chat-messenger** folder
 * Run ***npm install***
 * Run ***npm start***
 * In browser, navigate to **http://localhost:3000**
-
-<br><br>
 
 ## To run app using custom configuration
 * In terminal, ***cd*** to **web-chat-messenger** folder
@@ -20,7 +18,7 @@
 * port **3000** and **mongodb://127.0.0.1:27017/chat** are the default values
 * Remember to change WebSocket url in [client.js](client.js) (default url is **http://localhost:3000**) to match the port, , then run ***npm run build***
 * In browser, navigate to **http://localhost:3000**
-<br><br>
+
 ## Use cases & Features
 #### Sign in screen
 * User can sign in via Facebook
@@ -39,7 +37,7 @@
 * User can hit Enter to send a message
 * User can click the Send button to send a message
 * Blank message will not be sent
-<br><br>
+
 ## Code walkthrough
 * [server.js](server.js) : contains back-end related code, to setup http and WebSocket servers
 
