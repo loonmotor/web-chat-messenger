@@ -16,7 +16,7 @@
 * Run ***npm install***
 * Run ***node server.js --port 3000 --mongoUrl mongodb://127.0.0.1:27017/chat***
 * port **3000** and **mongodb://127.0.0.1:27017/chat** are the default values
-* Remember to change WebSocket url in [client.js](client.js) (default url is **http://localhost:3000**) to match the port, , then run ***npm run build***
+* Remember to change WebSocket url in [client.js](client.js) (default url is **http://localhost:3000**) to match the port, then run ***npm run build***
 * In browser, navigate to **http://localhost:3000**
 
 ## Use cases & Features
@@ -53,13 +53,13 @@
 * [handlers/socket-events-handler.js](handlers/socket-events-handler.js) : encapsulates WebSocket's event handlers
 
 
-* [package.json](package.json) : Contains a list of project's dependencies and build script command
+* [package.json](package.json) : contains a list of project's dependencies and build script command
 
 
-* [webpack.config.js](webpack.config.js) : Contains Webpack configuration
+* [webpack.config.js](webpack.config.js) : contains Webpack configuration
 
 
-* [.babelrc](.babelrc) : Contains Babel configuration
+* [.babelrc](.babelrc) : contains Babel configuration
 
 
 * [gulpfile.js](gulpfile.js) : contains automation related code, to run SASS compilation
