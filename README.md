@@ -10,7 +10,9 @@
 * Run ***npm install***
 * Run ***npm start***
 * In browser, navigate to **http://localhost:3000**
+
 <br><br>
+
 ## To run app using custom configuration
 * In terminal, ***cd*** to **web-chat-messenger** folder
 * Run ***npm install***
