@@ -14,8 +14,9 @@
 ## To run app using custom configuration
 * In terminal, ***cd*** to **web-chat-messenger** folder
 * Run ***npm install***
-* Run ***node server.js --port 3000 --mongoUrl mongodb://127.0.0.1:27017/chat***
-* port **3000** and **mongodb://127.0.0.1:27017/chat** are the default values
+* Run ***node server.js --port 3000 --activeTimeout 60s --mongoUrl mongodb://127.0.0.1:27017/chat***
+* port **3000**, **60s**, and **mongodb://127.0.0.1:27017/chat** are the default values
+* **activeTimeout** controls active users timeout since their last messages, the value format is based on the [**ms**](https://www.npmjs.com/package/ms) package
 * Remember to change WebSocket url in [client.js](client.js) (default url is **http://localhost:3000**) to match the port, then run ***npm run build***
 * In browser, navigate to **http://localhost:3000**
 

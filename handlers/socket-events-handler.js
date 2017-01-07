@@ -15,8 +15,8 @@ const
             redis.multi()
                 .set(`user:${id}`, JSON.stringify({email, id, name, pictureUrl}))
                 .zadd('users', 0, `user:${id}`)
-                .zrevrangebyscore('users', Date.now(), Date.now() - ms('60s'))
-                .zrevrangebyscore('users', Date.now() - ms('60s') - 1, 0)
+                .zrevrangebyscore('users', Date.now(), Date.now() - ms(argv.activeTimeout || '60s'))
+                .zrevrangebyscore('users', Date.now() - ms(argv.activeTimeout || '60s') - 1, 0)
                 .exec()
                 .then(replies => {
 
@@ -63,8 +63,8 @@ const
                         {id} = msg.user;
                     redis.multi()
                         .zadd('users', Date.now(), `user:${id}`)
-                        .zrevrangebyscore('users', Date.now(), Date.now() - ms('60s'))
-                        .zrevrangebyscore('users', Date.now() - ms('60s') - 1, 0)
+                        .zrevrangebyscore('users', Date.now(), Date.now() - ms(argv.activeTimeout || '60s'))
+                        .zrevrangebyscore('users', Date.now() - ms(argv.activeTimeout || '60s') - 1, 0)
                         .exec()
                         .then(replies => {
                             
@@ -114,8 +114,8 @@ const
                 redis.multi()
                     .del(`user:${id}`)
                     .zrem('users', `user:${id}`)
-                    .zrevrangebyscore('users', Date.now(), Date.now() - ms('60s'))
-                    .zrevrangebyscore('users', Date.now() - ms('60s') - 1, 0)
+                    .zrevrangebyscore('users', Date.now(), Date.now() - ms(argv.activeTimeout || '60s'))
+                    .zrevrangebyscore('users', Date.now() - ms(argv.activeTimeout || '60s') - 1, 0)
                     .exec()
                     .then(replies => {
                         const
